@@ -22,28 +22,32 @@
 - [x] Configure Supabase PostgreSQL connection (with `sslmode=require`)
 - [x] Configure Cloudinary storage (`STORAGES` + `CLOUDINARY_STORAGE`)
 - [x] Register `devices`, `cloudinary`, `cloudinary_storage` in `INSTALLED_APPS`
-- [ ] Verify DB connectivity (`python manage.py check` / `migrate`)
-- [ ] Run initial `migrate` to create Django's built-in tables on Supabase
-- [ ] Initialize git repository and make first commit
+- [x] Verify DB connectivity (`python manage.py check` / `migrate`)
+- [x] Run initial `migrate` to create Django's built-in tables on Supabase
+- [x] Initialize git repository and make first commit
+- [x] Create custom `User` model (`accounts.User`, RBAC role field) **before** first migrate
 
 ---
 
 ## 🔐 Phase 2 — Authentication & User Management
 
-- [ ] Create an `accounts` (or `users`) app for auth concerns
-- [ ] Decide on a custom `User` model (extend `AbstractUser`) — *do this before first migrate if used*
-- [ ] **Login** page + view (session-based auth)
-- [ ] **Register** page + view (with validation)
-- [ ] **Logout** flow
-- [ ] **Forgot Password** (email reset token flow)
-- [ ] **Change Password** (authenticated user)
-- [ ] **Role-Based Access Control (RBAC)**
-  - [ ] Define roles: `Admin`, `Manager`, `Technician`, `Viewer`
-  - [ ] Permission decorators / mixins (`@login_required`, role-checking mixin)
-  - [ ] Restrict views/actions by role
-- [ ] Profile page (view/edit own info + avatar to Cloudinary)
-- [ ] Configure `LOGIN_URL`, `LOGIN_REDIRECT_URL`, `LOGOUT_REDIRECT_URL`
-- [ ] Email backend configuration for password reset
+- [x] Create an `accounts` (or `users`) app for auth concerns
+- [x] Decide on a custom `User` model (extend `AbstractUser`) — *done before first migrate*
+- [x] **Login** page + view (session-based auth, styled per design system)
+- [x] ~~**Register** (public)~~ → replaced by **Admin User Management** (decision: admin-managed users only)
+- [x] **Logout** flow (POST, Django 6 requirement)
+- [x] **Forgot Password** (email reset token flow via Gmail SMTP)
+- [x] **Change Password** (authenticated user)
+- [x] **Role-Based Access Control (RBAC)**
+  - [x] Define roles: `Admin`, `Manager`, `Technician`, `Viewer`
+  - [x] Permission decorators / mixins (`RoleRequiredMixin`, `AdminRequiredMixin`, `role_required`)
+  - [x] Restrict views/actions by role (User Management = Admin only)
+- [x] **User Management (Admin)**: list (search + pagination), create, edit, delete (self-delete guarded)
+- [x] Profile page (view/edit own info + avatar to Cloudinary)
+- [x] Configure `LOGIN_URL`, `LOGIN_REDIRECT_URL`, `LOGOUT_REDIRECT_URL`
+- [x] Email backend configuration for password reset (Gmail SMTP via `.env`)
+- [x] Base layout + design-system CSS (`templates/base.html`, `static/css/base.css`)
+- [x] Seed admin account (`admin` / `Admin@123456`, role=admin)
 
 ---
 

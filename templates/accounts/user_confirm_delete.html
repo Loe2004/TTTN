@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Xóa người dùng — QR Device Manager{% endblock %}
+{% block header_title %}<h1 style="font-size:18px">Xóa người dùng</h1>{% endblock %}
+
+{% block content %}
+<div class="page__header">
+  <h1>Xóa người dùng</h1>
+</div>
+
+<div class="card" style="max-width: 500px">
+  <p>
+    Bạn có chắc muốn xóa người dùng
+    <strong>{{ object.username }}</strong>? Hành động này không thể hoàn tác.
+  </p>
+  <form method="post">
+    {% csrf_token %}
+    <div style="display: flex; gap: 8px; margin-top: 24px">
+      <button type="submit" class="btn btn--danger">Xóa</button>
+      <a href="{% url 'accounts:user_list' %}" class="btn btn--ghost">Hủy</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

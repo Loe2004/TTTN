@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Hồ sơ — QR Device Manager{% endblock %}
+{% block header_title %}<h1 style="font-size:18px">Hồ sơ cá nhân</h1>{% endblock %}
+
+{% block content %}
+<div class="page__header">
+  <h1>Hồ sơ cá nhân</h1>
+  <a href="{% url 'accounts:password_change' %}" class="btn btn--ghost">Đổi mật khẩu</a>
+</div>
+
+<div class="card" style="max-width: 500px">
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="form-group">
+      <label class="form-label">Tên đăng nhập</label>
+      <input type="text" class="form-control" value="{{ user.username }}" disabled />
+      <div class="form-help">Vai trò: {{ user.get_role_display }}</div>
+    </div>
+    {% for field in form %}
+    <div class="form-group">
+      <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field }}
+      {% if field.errors %}<div class="form-error">{{ field.errors|striptags }}</div>{% endif %}
+    </div>
+    {% endfor %}
+    <div style="margin-top: 24px">
+      <button type="submit" class="btn btn--primary">Lưu thay đổi</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

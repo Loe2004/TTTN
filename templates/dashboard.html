@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — QR Device Manager{% endblock %}
+{% block header_title %}<h1 style="font-size:18px">Dashboard</h1>{% endblock %}
+
+{% block content %}
+<div class="page__header">
+  <h1>Xin chào, {{ user.get_full_name|default:user.username }} 👋</h1>
+</div>
+
+<div class="card">
+  <h2>Chào mừng đến QR Device Manager</h2>
+  <p class="text-muted" style="margin-top: 8px">
+    Hệ thống đã thiết lập xong phần xác thực &amp; phân quyền (Phase 2). Phần
+    thống kê &amp; biểu đồ sẽ được xây dựng ở Phase 7.
+  </p>
+</div>
+{% endblock %}
