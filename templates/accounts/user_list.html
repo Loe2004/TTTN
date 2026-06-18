@@ -5,8 +5,16 @@
 {% block content %}
 <div class="page__header">
   <h1>Người dùng</h1>
-  <a href="{% url 'accounts:user_add' %}" class="btn btn--primary">+ Thêm người dùng</a>
+  <div style="display: flex; gap: 8px">
+    <button id="bulkDeactivateBtn" class="btn btn--danger" style="display: none"><i data-lucide="lock"></i> Khóa đã chọn (<span id="selectedCount">0</span>)</button>
+    <a href="{% url 'accounts:user_add' %}" class="btn btn--primary"><i data-lucide="plus"></i> Thêm người dùng</a>
+  </div>
 </div>
+
+<form id="bulkDeactivateForm" method="post" action="{% url 'accounts:user_bulk_deactivate' %}" style="display: none">
+  {% csrf_token %}
+  <input type="hidden" name="ids" id="deactivateIds" />
+</form>
 
 <div class="utility-bar">
   <form method="get" style="display: flex; gap: 8px">
@@ -18,7 +26,7 @@
       placeholder="Tìm theo tên, email..."
       style="width: 280px"
     />
-    <button type="submit" class="btn btn--ghost">Tìm</button>
+    <button type="submit" class="btn btn--ghost"><i data-lucide="search"></i> Tìm</button>
   </form>
 </div>
 
@@ -26,6 +34,7 @@
   <table class="table">
     <thead>
       <tr>
+        <th style="width: 40px"><input type="checkbox" id="selectAll" /></th>
         <th>Tên đăng nhập</th>
         <th>Họ tên</th>
         <th>Email</th>
@@ -36,7 +45,12 @@
     </thead>
     <tbody>
       {% for u in users %}
-      <tr>
+      <tr {% if not u.is_active %}style="opacity: 0.6; background: #f9f9f9"{% endif %}>
+        <td>
+          {% if u != request.user %}
+          <input type="checkbox" class="item-checkbox" value="{{ u.pk }}" />
+          {% endif %}
+        </td>
         <td>{{ u.username }}</td>
         <td>{{ u.get_full_name|default:"—" }}</td>
         <td>{{ u.email|default:"—" }}</td>
@@ -45,13 +59,13 @@
           {% if u.is_active %}
           <span class="badge badge--success">Hoạt động</span>
           {% else %}
-          <span class="badge badge--danger">Khóa</span>
+          <span class="badge badge--danger">Đã khóa</span>
           {% endif %}
         </td>
         <td style="text-align: right">
           <a href="{% url 'accounts:user_edit' u.pk %}" class="btn btn--ghost btn--sm">Sửa</a>
-          {% if u != request.user %}
-          <a href="{% url 'accounts:user_delete' u.pk %}" class="btn btn--danger btn--sm">Xóa</a>
+          {% if u != request.user and u.is_active %}
+          <a href="{% url 'accounts:user_delete' u.pk %}" class="btn btn--danger btn--sm">Khóa</a>
           {% endif %}
         </td>
       </tr>
@@ -77,4 +91,45 @@
   {% endif %}
 </div>
 {% endif %}
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.item-checkbox');
+    const bulkDeactivateBtn = document.getElementById('bulkDeactivateBtn');
+    const selectedCount = document.getElementById('selectedCount');
+    const deactivateIds = document.getElementById('deactivateIds');
+    const bulkDeactivateForm = document.getElementById('bulkDeactivateForm');
+
+    const updateUI = () => {
+      const checked = Array.from(checkboxes).filter(cb => cb.checked);
+      selectedCount.textContent = checked.length;
+      bulkDeactivateBtn.style.display = checked.length > 0 ? 'inline-block' : 'none';
+    };
+
+    selectAll.addEventListener('change', () => {
+      checkboxes.forEach(cb => cb.checked = selectAll.checked);
+      updateUI();
+    });
+
+    checkboxes.forEach(cb => {
+      cb.addEventListener('change', () => {
+        selectAll.checked = Array.from(checkboxes).every(c => c.checked);
+        updateUI();
+      });
+    });
+
+    bulkDeactivateBtn.addEventListener('click', () => {
+      const ids = Array.from(checkboxes)
+        .filter(cb => cb.checked)
+        .map(cb => cb.value)
+        .join(',');
+      
+      if (ids && confirm('Bạn có chắc muốn khóa các người dùng đã chọn?')) {
+        deactivateIds.value = ids;
+        bulkDeactivateForm.submit();
+      }
+    });
+  });
+</script>
 {% endblock %}

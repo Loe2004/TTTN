@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}Quét QR — QR Device Manager{% endblock %}
+{% block header_title %}<h1 style="font-size:18px">Quét mã QR</h1>{% endblock %}
+
+{% block extra_head %}
+<style>
+  .scanner-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+  #reader-wrap {
+    border: 3px dashed var(--primary);
+    border-radius: 12px;
+    padding: 8px;
+    aspect-ratio: 1 / 1;
+    background: #fff;
+    transition: border-color 0.3s ease;
+  }
+  #reader-wrap.success { border-color: var(--success); }
+  #reader { width: 100%; }
+  @media (max-width: 860px) { .scanner-grid { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page__header"><h1>Quét mã QR thiết bị</h1></div>
+
+<div class="scanner-grid">
+  <div class="card">
+    <h2>Camera</h2>
+    <div id="reader-wrap" style="margin-top: 16px"><div id="reader"></div></div>
+    <p class="small" style="margin-top: 8px">Đưa mã QR của thiết bị vào khung hình.</p>
+  </div>
+
+  <div class="card">
+    <h2>Kết quả</h2>
+    <div id="result" style="margin-top: 16px">
+      <p class="text-muted">Chưa quét mã nào.</p>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+  const resultBox = document.getElementById("result");
+  const readerWrap = document.getElementById("reader-wrap");
+  let busy = false;
+
+  function extractUuid(text) {
+    // QR may encode a full URL (.../api/resolve/<uuid>/ or /devices/<id>/) or a raw UUID.
+    const uuidRe = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+    const m = text.match(uuidRe);
+    return m ? m[0] : null;
+  }
+
+  async function onScanSuccess(decodedText) {
+    if (busy) return;
+    busy = true;
+
+    // Visual feedback: green border for 1s.
+    readerWrap.classList.add("success");
+    setTimeout(() => readerWrap.classList.remove("success"), 1000);
+
+    const uuid = extractUuid(decodedText);
+    if (!uuid) {
+      resultBox.innerHTML =
+        '<div class="alert alert--warning">Mã QR không hợp lệ.</div>';
+      setTimeout(() => (busy = false), 1500);
+      return;
+    }
+
+    try {
+      const res = await fetch(`/devices/api/resolve/${uuid}/`);
+      const data = await res.json();
+      if (data.found) {
+        const d = data.device;
+        resultBox.innerHTML = `
+          <div class="alert alert--success">Tìm thấy thiết bị!</div>
+          <table class="table">
+            <tbody>
+              <tr><td><strong>Tên</strong></td><td>${d.name}</td></tr>
+              <tr><td><strong>Serial</strong></td><td>${d.serial_number || "—"}</td></tr>
+              <tr><td><strong>Trạng thái</strong></td><td>${d.status}</td></tr>
+              <tr><td><strong>Danh mục</strong></td><td>${d.category || "—"}</td></tr>
+              <tr><td><strong>Vị trí</strong></td><td>${d.location || "—"}</td></tr>
+            </tbody>
+          </table>
+          <a href="${d.detail_url}" class="btn btn--primary" style="margin-top: 16px">Xem chi tiết</a>`;
+      } else {
+        resultBox.innerHTML =
+          '<div class="alert alert--error">Không tìm thấy thiết bị.</div>';
+      }
+    } catch (e) {
+      resultBox.innerHTML =
+        '<div class="alert alert--error">Lỗi khi truy vấn thiết bị.</div>';
+    }
+    setTimeout(() => (busy = false), 1500);
+  }
+
+  const scanner = new Html5Qrcode("reader");
+  Html5Qrcode.getCameras()
+    .then((cameras) => {
+      if (cameras && cameras.length) {
+        scanner.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 250, height: 250 } },
+          onScanSuccess
+        );
+      } else {
+        resultBox.innerHTML =
+          '<div class="alert alert--warning">Không tìm thấy camera.</div>';
+      }
+    })
+    .catch(() => {
+      resultBox.innerHTML =
+        '<div class="alert alert--error">Không thể truy cập camera. Vui lòng cấp quyền.</div>';
+    });
+</script>
+{% endblock %}

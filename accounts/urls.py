@@ -44,4 +44,9 @@ urlpatterns = [
         views.UserDeleteView.as_view(),
         name="user_delete",
     ),
+    path(
+        "users/bulk-deactivate/",
+        views.UserBulkDeactivateView.as_view(),
+        name="user_bulk_deactivate",
+    ),
 ]

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}In QR hàng loạt — QR Device Manager{% endblock %}
+{% block header_title %}<h1 style="font-size:18px">In mã QR hàng loạt</h1>{% endblock %}
+
+{% block extra_head %}
+<style>
+  @media print {
+    .sidebar, .header, .no-print { display: none !important; }
+    .main { margin-left: 0 !important; width: 100% !important; }
+    .page { padding: 0 !important; }
+    .qr-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    .qr-label { page-break-inside: avoid; }
+  }
+  .qr-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 24px;
+  }
+  .qr-label {
+    text-align: center;
+    border: 1px dashed #ccc;
+    padding: 20px;
+    background: #fff;
+    border-radius: 4px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page__header no-print">
+  <h1>In mã QR cho {{ devices.count }} thiết bị</h1>
+  <div style="display: flex; gap: 8px">
+    <button onclick="window.print()" class="btn btn--primary"><i data-lucide="printer"></i> In tất cả</button>
+    <a href="{% url 'devices:device_list' %}" class="btn btn--ghost"><i data-lucide="arrow-left"></i> Quay lại danh sách</a>
+  </div>
+</div>
+
+<div class="qr-grid">
+  {% for device in devices %}
+  <div class="qr-label">
+    {% if device.qr_code %}
+    <img src="{{ device.qr_code.url }}" alt="QR" style="width: 200px; height: 200px" />
+    {% endif %}
+    <h3 style="margin: 12px 0 4px 0; font-size: 16px">{{ device.name }}</h3>
+    <p class="small" style="margin: 0; color: #666">{{ device.serial_number|default:device.uuid }}</p>
+  </div>
+  {% empty %}
+  <div class="card">Chưa chọn thiết bị nào để in.</div>
+  {% endfor %}
+</div>
+{% endblock %}

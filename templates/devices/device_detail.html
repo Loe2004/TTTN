@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}{{ device.name }} — QR Device Manager{% endblock %}
+{% block header_title %}<h1 style="font-size:18px">Chi tiết thiết bị</h1>{% endblock %}
+
+{% block content %}
+<div class="page__header">
+  <h1>{{ device.name }}</h1>
+  <div style="display: flex; gap: 8px">
+    <a href="{% url 'devices:device_qr' device.pk %}" class="btn btn--ghost"><i data-lucide="qr-code"></i> In nhãn QR</a>
+    {% if user.is_staff_role %}
+    <a href="{% url 'devices:device_edit' device.pk %}" class="btn btn--primary"><i data-lucide="edit"></i> Sửa</a>
+    {% endif %}
+    {% if user.is_manager_role and device.is_active %}
+    <a href="{% url 'devices:device_delete' device.pk %}" class="btn btn--danger"><i data-lucide="lock"></i> Khóa</a>
+    {% endif %}
+  </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; align-items: start">
+  <div class="card">
+    <h2>Thông tin</h2>
+    <table class="table" style="margin-top: 16px">
+      <tbody>
+        <tr><td style="width: 200px"><strong>Trạng thái</strong></td><td><span class="badge {{ device.status_badge_class }}">{{ device.get_status_display }}</span></td></tr>
+        <tr><td><strong>Serial</strong></td><td>{{ device.serial_number|default:"—" }}</td></tr>
+        <tr><td><strong>Model</strong></td><td>{{ device.model|default:"—" }}</td></tr>
+        <tr><td><strong>Hãng</strong></td><td>{{ device.manufacturer|default:"—" }}</td></tr>
+        <tr><td><strong>Danh mục</strong></td><td>{{ device.category.name|default:"—" }}</td></tr>
+        <tr><td><strong>Vị trí</strong></td><td>{{ device.location|default:"—" }}</td></tr>
+        <tr><td><strong>Người phụ trách</strong></td><td>{{ device.assigned_to_display }}</td></tr>
+        <tr><td><strong>Ngày mua</strong></td><td>{{ device.purchase_date|default:"—" }}</td></tr>
+        <tr><td><strong>Hết bảo hành</strong></td><td>{{ device.warranty_expiry|default:"—" }}</td></tr>
+        <tr><td><strong>UUID</strong></td><td class="small">{{ device.uuid }}</td></tr>
+      </tbody>
+    </table>
+    {% if device.notes %}
+    <div style="margin-top: 16px">
+      <strong>Ghi chú:</strong>
+      <p class="text-muted">{{ device.notes|linebreaksbr }}</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Hình ảnh</h2>
+    {% if device.image %}
+    <img src="{{ device.image.url }}" alt="{{ device.name }}" style="width: 100%; border-radius: 8px; margin-top: 16px" />
+    {% else %}
+    <p class="text-muted" style="margin-top: 16px">Chưa có hình ảnh.</p>
+    {% endif %}
+    {% if device.qr_code %}
+    <div style="text-align: center; margin-top: 16px">
+      <img src="{{ device.qr_code.url }}" alt="QR" style="width: 140px; height: 140px" />
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card" style="margin-top: 24px">
+  <h2>Nhật ký bảo trì</h2>
+  {% if user.is_staff_role %}
+  <form method="post" action="{% url 'devices:log_add' device.pk %}" style="margin-top: 16px">
+    {% csrf_token %}
+    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 12px; align-items: end">
+      <div class="form-group" style="margin: 0">
+        <label class="form-label">Hành động</label>
+        {{ log_form.action }}
+      </div>
+      <div class="form-group" style="margin: 0">
+        <label class="form-label">Chi phí</label>
+        {{ log_form.cost }}
+      </div>
+      <div class="form-group" style="margin: 0">
+        <label class="form-label">Thời điểm</label>
+        {{ log_form.performed_at }}
+      </div>
+      <button type="submit" class="btn btn--primary"><i data-lucide="plus"></i> Thêm</button>
+    </div>
+    <div class="form-group" style="margin-top: 12px">
+      <label class="form-label">Ghi chú</label>
+      {{ log_form.notes }}
+    </div>
+  </form>
+  {% endif %}
+
+  <div class="table-wrapper" style="margin-top: 16px">
+    <table class="table">
+      <thead>
+        <tr><th>Thời điểm</th><th>Hành động</th><th>Người thực hiện</th><th>Chi phí</th><th>Ghi chú</th></tr>
+      </thead>
+      <tbody>
+        {% for log in logs %}
+        <tr>
+          <td>{{ log.performed_at|date:"d/m/Y H:i" }}</td>
+          <td>{{ log.action }}</td>
+          <td>{{ log.performed_by|default:"—" }}</td>
+          <td>{{ log.cost }}</td>
+          <td>{{ log.notes|default:"—" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="text-muted" style="text-align: center">Chưa có nhật ký.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

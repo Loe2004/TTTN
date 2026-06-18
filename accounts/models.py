@@ -50,3 +50,20 @@ class User(AbstractUser):
     @property
     def is_technician(self) -> bool:
         return self.role == self.Role.TECHNICIAN
+
+    @property
+    def is_staff_role(self) -> bool:
+        """Admin, Manager or Technician (i.e. can create/edit devices)."""
+        return self.is_superuser or self.role in (
+            self.Role.ADMIN,
+            self.Role.MANAGER,
+            self.Role.TECHNICIAN,
+        )
+
+    @property
+    def is_manager_role(self) -> bool:
+        """Admin or Manager (i.e. can delete / manage taxonomy)."""
+        return self.is_superuser or self.role in (
+            self.Role.ADMIN,
+            self.Role.MANAGER,
+        )

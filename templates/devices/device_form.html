@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} — QR Device Manager{% endblock %}
+{% block header_title %}<h1 style="font-size:18px">{{ title }}</h1>{% endblock %}
+
+{% block content %}
+<div class="page__header">
+  <h1>{{ title }}</h1>
+  <a href="{% url 'devices:device_list' %}" class="btn btn--ghost">← Quay lại</a>
+</div>
+
+<div class="card" style="max-width: 720px">
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="alert alert--error">{{ form.non_field_errors }}</div>{% endif %}
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px">
+      {% for field in form %}
+      <div class="form-group" {% if field.name == 'notes' or field.name == 'image' %}style="grid-column: 1 / -1"{% endif %}>
+        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}<div class="form-error">{{ field.errors|striptags }}</div>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    <div style="display: flex; gap: 8px; margin-top: 24px">
+      <button type="submit" class="btn btn--primary">Lưu</button>
+      <a href="{% url 'devices:device_list' %}" class="btn btn--ghost">Hủy</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Xác nhận xóa — QR Device Manager{% endblock %}
+{% block header_title %}<h1 style="font-size:18px">Xác nhận xóa</h1>{% endblock %}
+
+{% block content %}
+<div class="page__header"><h1>Xác nhận xóa</h1></div>
+<div class="card" style="max-width: 500px">
+  <p>Bạn có chắc muốn xóa <strong>{{ object }}</strong>? Hành động này không thể hoàn tác.</p>
+  <form method="post">
+    {% csrf_token %}
+    <div style="display: flex; gap: 8px; margin-top: 24px">
+      <button type="submit" class="btn btn--danger">Xóa</button>
+      <a href="javascript:history.back()" class="btn btn--ghost">Hủy</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

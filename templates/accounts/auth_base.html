@@ -11,17 +11,23 @@
     rel="stylesheet"
   />
   <link rel="stylesheet" href="{% static 'css/base.css' %}" />
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
   <div class="auth-wrapper">
     <div class="auth-card">
       <div class="auth-card__brand">
-        <div style="font-size: 32px">📦</div>
+        <div style="font-size: 32px; color: var(--primary)">
+          <i data-lucide="package" style="width: 48px; height: 48px"></i>
+        </div>
       </div>
       {% if messages %} {% for message in messages %}
       <div class="alert alert--{{ message.tags }}">{{ message }}</div>
       {% endfor %} {% endif %} {% block content %}{% endblock %}
     </div>
   </div>
+  <script>
+    lucide.createIcons();
+  </script>
 </body>
 </html>

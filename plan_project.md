@@ -51,87 +51,87 @@
 
 ---
 
-## 🗄️ Phase 3 — Database Models
+## ✅ Phase 3 — Database Models
 
-- [ ] **Role** model (name, description, permission flags)
-- [ ] **User** model (custom; linked to Role; phone, avatar)
-- [ ] **Category** model (device category: name, description)
-- [ ] **Location** model (building / room / department hierarchy)
-- [ ] **Device** model
-  - [ ] `uuid` (UUIDField, unique, indexed — used in QR codes)
-  - [ ] name, serial number, model, manufacturer
-  - [ ] FK → Category, FK → Location
-  - [ ] status (`active`, `maintenance`, `broken/disposed`)
-  - [ ] purchase date, warranty expiry, assigned user
-  - [ ] image (Cloudinary), qr_code image (Cloudinary)
-  - [ ] created_at / updated_at timestamps
-- [ ] **MaintenanceLog** model (FK → Device, FK → User, action, notes, cost, date)
-- [ ] Register all models in Django admin
-- [ ] Create & run migrations
-- [ ] Seed initial data (roles, sample categories/locations) via fixture or management command
-
----
-
-## 🛠️ Phase 4 — Core CRUD & Cloudinary Integration
-
-- [ ] Device **list** view (table, pagination, search, filters by status/category/location)
-- [ ] Device **detail** view
-- [ ] Device **create** (form with image upload → Cloudinary)
-- [ ] Device **edit/update**
-- [ ] Device **delete** (with confirmation modal)
-- [ ] Category CRUD
-- [ ] Location CRUD
-- [ ] MaintenanceLog CRUD (add log to a device)
-- [ ] Cloudinary upload validation (file type, size)
-- [ ] Forms styled per design system (inputs, labels, buttons)
-- [ ] Apply RBAC to all CRUD actions
+- [x] **Role** — handled via `User.role` choices field (admin/manager/technician/viewer) for early-stage RBAC
+- [x] **User** model (custom; role, phone, avatar)
+- [x] **Category** model (device category: name, description)
+- [x] **Location** model (building / room / department hierarchy)
+- [x] **Device** model
+  - [x] `uuid` (UUIDField, unique, indexed — used in QR codes)
+  - [x] name, serial number, model, manufacturer
+  - [x] FK → Category, FK → Location
+  - [x] status (`active`, `maintenance`, `broken/disposed`)
+  - [x] purchase date, warranty expiry, assigned user
+  - [x] image (Cloudinary), qr_code image (Cloudinary)
+  - [x] created_at / updated_at timestamps
+- [x] **MaintenanceLog** model (FK → Device, FK → User, action, notes, cost, date)
+- [x] Register all models in Django admin
+- [x] Create & run migrations (applied to Supabase)
+- [x] Seed sample data via `seed_data` management command (categories, locations, users, devices, maintenance logs)
 
 ---
 
-## 📷 Phase 5 — QR Code System
+## ✅ Phase 4 — Core CRUD & Cloudinary Integration
 
-- [ ] Auto-generate a QR code on device creation (encodes device `uuid` or detail URL)
-- [ ] Store generated QR image in Cloudinary
-- [ ] Endpoint to view / download a device's QR code
-- [ ] Printable QR label view (name + QR for physical attachment)
-- [ ] Bulk QR generation / export (optional)
-- [ ] **Frontend Camera Scanner**
-  - [ ] Integrate a JS QR scanner library (e.g. `html5-qrcode`)
-  - [ ] Scanner page following design system (1:1 frame, dashed Primary Blue border)
-  - [ ] On scan success: green border feedback for 1s, then fetch device info
-  - [ ] API endpoint to resolve `uuid` → device detail (JSON)
-  - [ ] Handle invalid / unknown QR gracefully
-
----
-
-## 🎨 Phase 6 — Frontend Development (per `frontend_guidelines.md`)
-
-- [ ] Base template (`base.html`) with Sidebar (260px) + Header (64px) + Main Content layout
-- [ ] Load Inter / Roboto font; set up CSS variables for the color palette
-- [ ] Implement design tokens (colors, spacing multiples of 4/8, radii)
-- [ ] Sidebar navigation component (Surface/Card bg, active link = Primary Blue)
-- [ ] Header component (search box + user avatar)
-- [ ] Button styles: Small (32px) / Medium (40px) / Large (48px), radius 6px
-- [ ] Table component (wrapper radius 8px + shadow; `<th>` 48px `#F1F5F9`; `<td>` 56px hover `#F8FAFC`)
-- [ ] Form/input styles (40px height, focus ring `rgba(37,99,235,0.2)`)
-- [ ] Card component (radius 12px, padding 24px, shadow)
-- [ ] Modal component (overlay `rgba(0,0,0,0.5)`, max-width 500/800px, radius 12px)
-- [ ] Status badges (Success Green / Warning Yellow / Danger Red)
-- [ ] Responsive behavior check
-- [ ] Configure static files pipeline (`STATICFILES_DIRS`, `collectstatic`)
+- [x] Device **list** view (table, pagination, search, filters by status/category/location)
+- [x] Device **detail** view
+- [x] Device **create** (form with image upload → Cloudinary)
+- [x] Device **edit/update**
+- [x] Device **delete** (with confirmation modal)
+- [x] Category CRUD
+- [x] Location CRUD
+- [x] MaintenanceLog CRUD (add log to a device)
+- [x] Cloudinary upload validation (file type, size)
+- [x] Forms styled per design system (inputs, labels, buttons)
+- [x] Apply RBAC to all CRUD actions
 
 ---
 
-## 📊 Phase 7 — Dashboard & Statistics
+## ✅ Phase 5 — QR Code System
 
-- [ ] Dashboard page (landing after login)
-- [ ] Summary counters (total devices, active, in maintenance, broken)
-- [ ] Devices-by-category breakdown
-- [ ] Devices-by-location breakdown
-- [ ] Status distribution chart (e.g. Chart.js pie/bar)
-- [ ] Recent maintenance activity feed
-- [ ] Recently added devices list
-- [ ] Cards styled per design system
+- [x] Auto-generate a QR code on device creation (encodes device detail URL / `uuid`)
+- [x] Store generated QR image in Cloudinary
+- [x] Endpoint to view / download a device's QR code
+- [x] Printable QR label view (name + QR for physical attachment)
+- [ ] Bulk QR generation / export (optional — chưa làm)
+- [x] **Frontend Camera Scanner**
+  - [x] Integrate a JS QR scanner library (`html5-qrcode`)
+  - [x] Scanner page following design system (1:1 frame, dashed Primary Blue border)
+  - [x] On scan success: green border feedback, then fetch device info
+  - [x] API endpoint to resolve `uuid` → device detail (JSON)
+  - [x] Handle invalid / unknown QR gracefully
+
+---
+
+## ✅ Phase 6 — Frontend Development (per `frontend_guidelines.md`)
+
+- [x] Base template (`base.html`) with Sidebar (260px) + Header (64px) + Main Content layout
+- [x] Load font; set up CSS variables for the color palette
+- [x] Implement design tokens (colors, spacing multiples of 4/8, radii)
+- [x] Sidebar navigation component (Surface/Card bg, active link = Primary Blue)
+- [x] Header component (search box + user avatar)
+- [x] Button styles: Small (32px) / Medium (40px) / Large (48px), radius 6px
+- [x] Table component (wrapper radius 8px + shadow; `<th>` `#F1F5F9`; `<td>` hover `#F8FAFC`)
+- [x] Form/input styles (40px height, focus ring `rgba(37,99,235,0.2)`)
+- [x] Card component (radius 12px, padding 24px, shadow)
+- [x] Modal / confirm pages styled per design system
+- [x] Status badges (Success Green / Warning Yellow / Danger Red)
+- [x] 403 / access-denied page styled
+- [x] Configure static files pipeline (`STATICFILES_DIRS`)
+
+---
+
+## ✅ Phase 7 — Dashboard & Statistics
+
+- [x] Dashboard page (landing after login)
+- [x] Summary counters (total devices, active, in maintenance, broken)
+- [x] Devices-by-category breakdown
+- [x] Devices-by-location breakdown
+- [x] Status distribution chart (Chart.js)
+- [x] Recent maintenance activity feed
+- [x] Recently added devices list
+- [x] Cards styled per design system
 
 ---
 

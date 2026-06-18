@@ -483,3 +483,21 @@ select.form-control {
   justify-content: space-between;
   margin-bottom: var(--space-3);
 }
+
+/* Icons styling */
+.lucide {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
+  vertical-align: middle;
+}
+
+.sidebar__link .lucide {
+  width: 20px;
+  height: 20px;
+}
+
+.btn .lucide {
+  width: 16px;
+  height: 16px;
+}

@@ -4,14 +4,111 @@
 
 {% block content %}
 <div class="page__header">
-  <h1>Xin chào, {{ user.get_full_name|default:user.username }} 👋</h1>
+  <h1>Xin chào, {{ user.get_full_name|default:user.username }} <i data-lucide="sparkles" style="color: var(--warning)"></i></h1>
+  {% if user.is_staff_role %}
+  <a href="{% url 'devices:device_add' %}" class="btn btn--primary"><i data-lucide="plus"></i> Thêm thiết bị</a>
+  {% endif %}
 </div>
 
-<div class="card">
-  <h2>Chào mừng đến QR Device Manager</h2>
-  <p class="text-muted" style="margin-top: 8px">
-    Hệ thống đã thiết lập xong phần xác thực &amp; phân quyền (Phase 2). Phần
-    thống kê &amp; biểu đồ sẽ được xây dựng ở Phase 7.
-  </p>
+<!-- Summary counters -->
+<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px">
+  <div class="card">
+    <div class="small">Tổng thiết bị</div>
+    <div style="font-size: 32px; font-weight: 700; margin-top: 8px">{{ total_devices }}</div>
+  </div>
+  <div class="card">
+    <div class="small">Hoạt động</div>
+    <div style="font-size: 32px; font-weight: 700; color: var(--success); margin-top: 8px">{{ status_counts.active }}</div>
+  </div>
+  <div class="card">
+    <div class="small">Đang bảo trì</div>
+    <div style="font-size: 32px; font-weight: 700; color: var(--warning); margin-top: 8px">{{ status_counts.maintenance }}</div>
+  </div>
+  <div class="card">
+    <div class="small">Hỏng / Thanh lý</div>
+    <div style="font-size: 32px; font-weight: 700; color: var(--danger); margin-top: 8px">{{ status_counts.broken }}</div>
+  </div>
 </div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px; align-items: start">
+  <div class="card">
+    <h2>Phân bố trạng thái</h2>
+    <div style="max-width: 280px; margin: 16px auto 0"><canvas id="statusChart"></canvas></div>
+  </div>
+
+  <div class="card">
+    <h2>Theo danh mục</h2>
+    <div class="table-wrapper" style="margin-top: 16px; box-shadow: none; border: none">
+      <table class="table">
+        <tbody>
+          {% for row in by_category %}
+          <tr>
+            <td>{{ row.name }}</td>
+            <td style="text-align: right"><strong>{{ row.count }}</strong></td>
+          </tr>
+          {% empty %}
+          <tr><td class="text-muted">Chưa có danh mục.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px; align-items: start">
+  <div class="card">
+    <h2>Thiết bị mới nhất</h2>
+    <div class="table-wrapper" style="margin-top: 16px; box-shadow: none; border: none">
+      <table class="table">
+        <tbody>
+          {% for d in recent_devices %}
+          <tr>
+            <td><a href="{% url 'devices:device_detail' d.pk %}">{{ d.name }}</a></td>
+            <td><span class="badge {{ d.status_badge_class }}">{{ d.get_status_display }}</span></td>
+          </tr>
+          {% empty %}
+          <tr><td class="text-muted">Chưa có thiết bị.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="card" style="margin-top: 24px">
+  <h2>Hoạt động bảo trì gần đây</h2>
+  <div class="table-wrapper" style="margin-top: 16px; box-shadow: none; border: none">
+    <table class="table">
+      <thead><tr><th>Thời điểm</th><th>Thiết bị</th><th>Hành động</th><th>Người thực hiện</th></tr></thead>
+      <tbody>
+        {% for log in recent_logs %}
+        <tr>
+          <td>{{ log.performed_at|date:"d/m/Y H:i" }}</td>
+          <td>{{ log.device.name }}</td>
+          <td>{{ log.action }}</td>
+          <td>{{ log.performed_by|default:"—" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="text-muted" style="text-align:center">Chưa có hoạt động.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+  new Chart(document.getElementById("statusChart"), {
+    type: "doughnut",
+    data: {
+      labels: ["Hoạt động", "Đang bảo trì", "Hỏng / Thanh lý"],
+      datasets: [{
+        data: [{{ status_counts.active }}, {{ status_counts.maintenance }}, {{ status_counts.broken }}],
+        backgroundColor: ["#10B981", "#F59E0B", "#EF4444"],
+        borderWidth: 0,
+      }],
+    },
+    options: { plugins: { legend: { position: "bottom" } } },
+  });
+</script>
 {% endblock %}

@@ -11,32 +11,53 @@
     rel="stylesheet"
   />
   <link rel="stylesheet" href="{% static 'css/base.css' %}" />
+  <script src="https://unpkg.com/lucide@latest"></script>
   {% block extra_head %}{% endblock %}
 </head>
 <body>
   <div class="app-shell">
     <aside class="sidebar">
       <div class="sidebar__brand">
-        <span>📦</span>
+        <i data-lucide="package"></i>
         <span>QR Device Manager</span>
       </div>
       <nav class="sidebar__nav">
         <a
           href="{% url 'dashboard' %}"
           class="sidebar__link {% if request.resolver_match.url_name == 'dashboard' %}is-active{% endif %}"
-          >Dashboard</a
+          ><i data-lucide="layout-dashboard"></i> Dashboard</a
+        >
+        <a
+          href="{% url 'devices:device_list' %}"
+          class="sidebar__link {% if 'device' in request.resolver_match.url_name and request.resolver_match.namespace == 'devices' %}is-active{% endif %}"
+          ><i data-lucide="laptop"></i> Thiết bị</a
+        >
+        <a
+          href="{% url 'devices:scanner' %}"
+          class="sidebar__link {% if request.resolver_match.url_name == 'scanner' %}is-active{% endif %}"
+          ><i data-lucide="qr-code"></i> Quét QR</a
+        >
+        <a
+          href="{% url 'devices:category_list' %}"
+          class="sidebar__link {% if 'category' in request.resolver_match.url_name %}is-active{% endif %}"
+          ><i data-lucide="layers"></i> Danh mục</a
+        >
+        <a
+          href="{% url 'devices:location_list' %}"
+          class="sidebar__link {% if 'location' in request.resolver_match.url_name %}is-active{% endif %}"
+          ><i data-lucide="map-pin"></i> Vị trí</a
         >
         {% if user.is_superuser or user.role == 'admin' %}
         <a
           href="{% url 'accounts:user_list' %}"
           class="sidebar__link {% if 'user' in request.resolver_match.url_name %}is-active{% endif %}"
-          >Người dùng</a
+          ><i data-lucide="users"></i> Người dùng</a
         >
         {% endif %}
         <a
           href="{% url 'accounts:profile' %}"
           class="sidebar__link {% if request.resolver_match.url_name == 'profile' %}is-active{% endif %}"
-          >Hồ sơ</a
+          ><i data-lucide="user"></i> Hồ sơ</a
         >
       </nav>
     </aside>
@@ -73,5 +94,8 @@
     </div>
   </div>
   {% block extra_scripts %}{% endblock %}
+  <script>
+    lucide.createIcons();
+  </script>
 </body>
 </html>

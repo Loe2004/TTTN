@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Danh mục — QR Device Manager{% endblock %}
+{% block header_title %}<h1 style="font-size:18px">Danh mục</h1>{% endblock %}
+
+{% block content %}
+<div class="page__header">
+  <h1>Danh mục thiết bị</h1>
+  <div style="display: flex; gap: 8px">
+    <button id="bulkDeactivateBtn" class="btn btn--danger" style="display: none"><i data-lucide="lock"></i> Khóa đã chọn (<span id="selectedCount">0</span>)</button>
+    {% if user.is_manager_role %}
+    <a href="{% url 'devices:category_add' %}" class="btn btn--primary"><i data-lucide="plus"></i> Thêm danh mục</a>
+    {% endif %}
+  </div>
+</div>
+
+<form id="bulkDeactivateForm" method="post" action="{% url 'devices:category_bulk_deactivate' %}" style="display: none">
+  {% csrf_token %}
+  <input type="hidden" name="ids" id="deactivateIds" />
+</form>
+
+<div class="table-wrapper">
+  <table class="table">
+    <thead>
+      <tr>
+        <th style="width: 40px"><input type="checkbox" id="selectAll" /></th>
+        <th>Tên</th>
+        <th>Mô tả</th>
+        <th>Số thiết bị</th>
+        <th>Trạng thái</th>
+        <th style="text-align:right">Thao tác</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in categories %}
+      <tr {% if not c.is_active %}style="opacity: 0.6; background: #f9f9f9"{% endif %}>
+        <td><input type="checkbox" class="item-checkbox" value="{{ c.pk }}" /></td>
+        <td><strong>{{ c.name }}</strong></td>
+        <td>{{ c.description|default:"—"|truncatechars:80 }}</td>
+        <td>{{ c.devices.count }}</td>
+        <td>
+          {% if c.is_active %}
+          <span class="badge badge--success">Hoạt động</span>
+          {% else %}
+          <span class="badge badge--danger">Đã khóa</span>
+          {% endif %}
+        </td>
+        <td style="text-align:right">
+          {% if user.is_manager_role %}
+          <a href="{% url 'devices:category_edit' c.pk %}" class="btn btn--ghost btn--sm">Sửa</a>
+          {% if c.is_active %}
+          <a href="{% url 'devices:category_delete' c.pk %}" class="btn btn--danger btn--sm">Khóa</a>
+          {% endif %}
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" class="text-muted" style="text-align:center">Chưa có danh mục.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.item-checkbox');
+    const bulkDeactivateBtn = document.getElementById('bulkDeactivateBtn');
+    const selectedCount = document.getElementById('selectedCount');
+    const deactivateIds = document.getElementById('deactivateIds');
+    const bulkDeactivateForm = document.getElementById('bulkDeactivateForm');
+
+    const updateUI = () => {
+      const checked = Array.from(checkboxes).filter(cb => cb.checked);
+      selectedCount.textContent = checked.length;
+      bulkDeactivateBtn.style.display = checked.length > 0 ? 'inline-block' : 'none';
+    };
+
+    selectAll.addEventListener('change', () => {
+      checkboxes.forEach(cb => cb.checked = selectAll.checked);
+      updateUI();
+    });
+
+    checkboxes.forEach(cb => {
+      cb.addEventListener('change', () => {
+        selectAll.checked = Array.from(checkboxes).every(c => c.checked);
+        updateUI();
+      });
+    });
+
+    bulkDeactivateBtn.addEventListener('click', () => {
+      const ids = Array.from(checkboxes)
+        .filter(cb => cb.checked)
+        .map(cb => cb.value)
+        .join(',');
+      
+      if (ids && confirm('Bạn có chắc muốn khóa các danh mục đã chọn?')) {
+        deactivateIds.value = ids;
+        bulkDeactivateForm.submit();
+      }
+    });
+  });
+</script>
+{% endblock %}

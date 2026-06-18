@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}QR — {{ device.name }}{% endblock %}
+{% block header_title %}<h1 style="font-size:18px">Mã QR thiết bị</h1>{% endblock %}
+
+{% block extra_head %}
+<style>
+  @media print {
+    .sidebar, .header, .no-print { display: none !important; }
+    .main { margin-left: 0 !important; width: 100% !important; }
+    .page { padding: 0 !important; }
+  }
+  .qr-label {
+    width: 320px; margin: 0 auto; text-align: center;
+    border: 1px dashed #ccc; border-radius: 4px; padding: 24px; background: #fff;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page__header no-print">
+  <h1>Mã QR — {{ device.name }}</h1>
+  <div style="display: flex; gap: 8px">
+    <button onclick="window.print()" class="btn btn--primary"><i data-lucide="printer"></i> In nhãn</button>
+    <a href="{% url 'devices:device_detail' device.pk %}" class="btn btn--ghost"><i data-lucide="arrow-left"></i> Quay lại</a>
+  </div>
+</div>
+
+<div class="qr-label">
+  {% if device.qr_code %}
+  <img src="{{ device.qr_code.url }}" alt="QR" style="width: 240px; height: 240px" />
+  {% endif %}
+  <h2 style="margin-top: 16px">{{ device.name }}</h2>
+  <p class="small">{{ device.serial_number|default:device.uuid }}</p>
+</div>
+{% endblock %}

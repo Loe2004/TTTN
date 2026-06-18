@@ -7,6 +7,7 @@
 """
 
 from django.contrib import messages
+from django.db import models
 from django.contrib.auth import get_user_model
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -18,6 +19,7 @@ from django.views.generic import (
     ListView,
     TemplateView,
     UpdateView,
+    View,
 )
 
 from .forms import (
@@ -151,12 +153,52 @@ class UserDeleteView(AdminRequiredMixin, DeleteView):
         return super().get_queryset().exclude(pk=self.request.user.pk)
 
     def form_valid(self, form):
-        messages.success(self.request, "Đã xóa người dùng.")
-        return super().form_valid(form)
+        self.object.is_active = False
+        self.object.save()
+        messages.success(self.request, "Đã khóa người dùng.")
+        return redirect(self.success_url)
+
+
+class UserBulkDeactivateView(AdminRequiredMixin, View):
+    def post(self, request):
+        ids = request.POST.get("ids", "").split(",")
+        valid_ids = [i for i in ids if i.isdigit() and int(i) != request.user.pk]
+        if valid_ids:
+            count = User.objects.filter(id__in=valid_ids).update(is_active=False)
+            messages.success(request, f"Đã khóa {count} người dùng.")
+        return redirect("accounts:user_list")
 
 
 # ---------------------------------------------------------------------------
-# Temporary dashboard placeholder (full version built in Phase 7)
+# Dashboard with statistics (Phase 7)
 # ---------------------------------------------------------------------------
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = "dashboard.html"
+
+    def get_context_data(self, **kwargs):
+        from devices.models import Category, Device, Location, MaintenanceLog
+
+        ctx = super().get_context_data(**kwargs)
+        devices = Device.objects.all()
+        status_counts = {
+            "active": devices.filter(status=Device.Status.ACTIVE).count(),
+            "maintenance": devices.filter(
+                status=Device.Status.MAINTENANCE
+            ).count(),
+            "broken": devices.filter(status=Device.Status.BROKEN).count(),
+        }
+        ctx["total_devices"] = devices.count()
+        ctx["status_counts"] = status_counts
+        ctx["total_categories"] = Category.objects.count()
+        ctx["total_locations"] = Location.objects.count()
+        ctx["recent_devices"] = devices.select_related("category", "location")[:5]
+        ctx["recent_logs"] = MaintenanceLog.objects.select_related(
+            "device", "performed_by"
+        )[:5]
+        # Devices grouped by category (for a simple breakdown chart).
+        ctx["by_category"] = list(
+            Category.objects.values("name").annotate(
+                count=models.Count("devices")
+            )
+        )
+        return ctx

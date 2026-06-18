@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block title %}Thiết bị — QR Device Manager{% endblock %}
+{% block header_title %}<h1 style="font-size:18px">Thiết bị</h1>{% endblock %}
+
+{% block content %}
+<div class="page__header">
+  <h1>Danh sách thiết bị</h1>
+  <div style="display: flex; gap: 8px">
+    <button id="bulkPrintBtn" class="btn btn--ghost" style="display: none"><i data-lucide="printer"></i> In QR đã chọn (<span id="selectedCount">0</span>)</button>
+    <button id="bulkDeactivateBtn" class="btn btn--danger" style="display: none"><i data-lucide="lock"></i> Khóa đã chọn</button>
+    <a href="{% url 'devices:scanner' %}" class="btn btn--ghost"><i data-lucide="camera"></i> Quét QR</a>
+    {% if user.is_staff_role %}
+    <a href="{% url 'devices:device_add' %}" class="btn btn--primary"><i data-lucide="plus"></i> Thêm thiết bị</a>
+    {% endif %}
+  </div>
+</div>
+
+<form method="get" class="card" style="margin-bottom: 24px; padding: 16px">
+  <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 12px; align-items: end">
+    <div class="form-group" style="margin: 0">
+      <label class="form-label">Tìm kiếm</label>
+      <input type="text" name="q" value="{{ current.q }}" class="form-control" placeholder="Tên, serial, model..." />
+    </div>
+    <div class="form-group" style="margin: 0">
+      <label class="form-label">Trạng thái</label>
+      <select name="status" class="form-control">
+        <option value="">Tất cả</option>
+        {% for value, label in statuses %}
+        <option value="{{ value }}" {% if current.status == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group" style="margin: 0">
+      <label class="form-label">Danh mục</label>
+      <select name="category" class="form-control">
+        <option value="">Tất cả</option>
+        {% for c in categories %}
+        <option value="{{ c.id }}" {% if current.category == c.id|stringformat:'s' %}selected{% endif %}>{{ c.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group" style="margin: 0">
+      <label class="form-label">Vị trí</label>
+      <select name="location" class="form-control">
+        <option value="">Tất cả</option>
+        {% for l in locations %}
+        <option value="{{ l.id }}" {% if current.location == l.id|stringformat:'s' %}selected{% endif %}>{{ l }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="btn btn--primary"><i data-lucide="filter"></i> Lọc</button>
+  </div>
+</form>
+
+<form id="bulkDeactivateForm" method="post" action="{% url 'devices:bulk_deactivate' %}" style="display: none">
+  {% csrf_token %}
+  <input type="hidden" name="ids" id="deactivateIds" />
+</form>
+
+<div class="table-wrapper">
+  <table class="table">
+    <thead>
+      <tr>
+        <th style="width: 40px"><input type="checkbox" id="selectAll" /></th>
+        <th>Tên thiết bị</th>
+        <th>Serial</th>
+        <th>Danh mục</th>
+        <th>Vị trí</th>
+        <th>Trạng thái</th>
+        <th>Hiển thị</th>
+        <th style="text-align: right">Thao tác</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for d in devices %}
+      <tr {% if not d.is_active %}style="opacity: 0.6; background: #f9f9f9"{% endif %}>
+        <td><input type="checkbox" class="device-checkbox" value="{{ d.pk }}" /></td>
+        <td><a href="{% url 'devices:device_detail' d.pk %}"><strong>{{ d.name }}</strong></a></td>
+        <td>{{ d.serial_number|default:"—" }}</td>
+        <td>{{ d.category.name|default:"—" }}</td>
+        <td>{{ d.location|default:"—" }}</td>
+        <td><span class="badge {{ d.status_badge_class }}">{{ d.get_status_display }}</span></td>
+        <td>
+          {% if d.is_active %}
+          <span class="badge badge--success">Hoạt động</span>
+          {% else %}
+          <span class="badge badge--danger">Đã khóa</span>
+          {% endif %}
+        </td>
+        <td style="text-align: right">
+          <a href="{% url 'devices:device_qr' d.pk %}" class="btn btn--ghost btn--sm" title="Xem QR"><i data-lucide="qr-code"></i></a>
+          <a href="{% url 'devices:device_detail' d.pk %}" class="btn btn--ghost btn--sm">Xem</a>
+          {% if user.is_staff_role %}
+          <a href="{% url 'devices:device_edit' d.pk %}" class="btn btn--ghost btn--sm">Sửa</a>
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" class="text-muted" style="text-align: center">Chưa có thiết bị nào.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if is_paginated %}
+<div class="utility-bar" style="margin-top: 16px; justify-content: center; gap: 8px">
+  {% if page_obj.has_previous %}
+  <a href="?page={{ page_obj.previous_page_number }}" class="btn btn--ghost btn--sm">←</a>
+  {% endif %}
+  <span class="small">Trang {{ page_obj.number }}/{{ page_obj.paginator.num_pages }}</span>
+  {% if page_obj.has_next %}
+  <a href="?page={{ page_obj.next_page_number }}" class="btn btn--ghost btn--sm">→</a>
+  {% endif %}
+</div>
+{% endif %}
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.device-checkbox');
+    const bulkPrintBtn = document.getElementById('bulkPrintBtn');
+    const bulkDeactivateBtn = document.getElementById('bulkDeactivateBtn');
+    const selectedCount = document.getElementById('selectedCount');
+    const deactivateIds = document.getElementById('deactivateIds');
+    const bulkDeactivateForm = document.getElementById('bulkDeactivateForm');
+
+    const updateUI = () => {
+      const checked = Array.from(checkboxes).filter(cb => cb.checked);
+      const count = checked.length;
+      selectedCount.textContent = count;
+      bulkPrintBtn.style.display = count > 0 ? 'inline-block' : 'none';
+      bulkDeactivateBtn.style.display = count > 0 ? 'inline-block' : 'none';
+    };
+
+    selectAll.addEventListener('change', () => {
+      checkboxes.forEach(cb => cb.checked = selectAll.checked);
+      updateUI();
+    });
+
+    checkboxes.forEach(cb => {
+      cb.addEventListener('change', () => {
+        selectAll.checked = Array.from(checkboxes).every(c => c.checked);
+        updateUI();
+      });
+    });
+
+    bulkPrintBtn.addEventListener('click', () => {
+      const ids = Array.from(checkboxes)
+        .filter(cb => cb.checked)
+        .map(cb => cb.value)
+        .join(',');
+      
+      if (ids) {
+        window.location.href = `{% url 'devices:bulk_qr' %}?ids=${ids}`;
+      }
+    });
+
+    bulkDeactivateBtn.addEventListener('click', () => {
+      const ids = Array.from(checkboxes)
+        .filter(cb => cb.checked)
+        .map(cb => cb.value)
+        .join(',');
+      
+      if (ids && confirm('Bạn có chắc muốn khóa các thiết bị đã chọn?')) {
+        deactivateIds.value = ids;
+        bulkDeactivateForm.submit();
+      }
+    });
+  });
+</script>
+{% endblock %}
