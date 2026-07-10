@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Tài khoản chờ duyệt — Admin{% endblock %}
+{% block header_title %}<h1 style="font-size:18px">Tài khoản chờ duyệt</h1>{% endblock %}
+
+{% block content %}
+<div class="card">
+  <p class="text-muted">Danh sách các tài khoản mới đang chờ admin phê duyệt.</p>
+  {% if users %}
+  <div class="table-wrapper" style="margin-top: 16px">
+    <table class="table">
+      <thead>
+        <tr><th>Tài khoản</th><th>Email</th><th>Vai trò</th><th>Ngày đăng ký</th><th>Hành động</th></tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+        <tr>
+          <td>{{ user.username }}</td>
+          <td>{{ user.email }}</td>
+          <td>{{ user.get_role_display }}</td>
+          <td>{{ user.date_joined|date:"Y-m-d H:i" }}</td>
+          <td>
+            <a href="{% url 'accounts:user_edit' user.pk %}" class="btn btn--ghost btn--sm">Duyệt / Sửa</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-muted" style="margin-top: 16px">Hiện không có tài khoản nào chờ duyệt.</p>
+  {% endif %}
+</div>
+{% endblock %}

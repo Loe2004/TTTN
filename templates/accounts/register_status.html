@@ -1,0 +1,21 @@
+{% extends "accounts/auth_base.html" %}
+{% block title %}Trạng thái đăng ký{% endblock %}
+{% block content %}
+<h1 class="auth-card__title">Trạng thái đăng ký</h1>
+{% if registered_user %}
+  <p>Tên người dùng: <strong>{{ registered_user.username }}</strong></p>
+  {% if registered_user.is_approved and registered_user.is_active %}
+    <div class="alert alert--success">Thành công: Tài khoản đã được duyệt và hoạt động.</div>
+  {% elif registered_user.is_rejected %}
+    <div class="alert alert--error">Thất bại: Tài khoản đã bị từ chối.</div>
+  {% else %}
+    <div class="alert">Chờ duyệt: Tài khoản của bạn đang chờ admin duyệt.</div>
+  {% endif %}
+{% else %}
+  <div class="alert">Không tìm thấy trạng thái đăng ký. Vui lòng thử lại hoặc liên hệ quản trị viên.</div>
+{% endif %}
+
+<div class="auth-card__footer">
+  <a href="{% url 'accounts:login' %}">← Quay lại đăng nhập</a>
+</div>
+{% endblock %}

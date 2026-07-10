@@ -53,6 +53,7 @@
           class="sidebar__link {% if 'user' in request.resolver_match.url_name %}is-active{% endif %}"
           ><i data-lucide="users"></i> Người dùng</a
         >
+        
         {% endif %}
         <a
           href="{% url 'accounts:profile' %}"
@@ -64,7 +65,12 @@
 
     <div class="main">
       <header class="header">
-        <div>{% block header_title %}{% endblock %}</div>
+        <div class="header__left">
+          <div>{% block header_title %}{% endblock %}</div>
+          {% if user.is_superuser or user.role == 'admin' %}
+          <a href="{% url 'accounts:admin_dashboard' %}" class="header__link"><i data-lucide="layout-dashboard"></i> Admin Dashboard</a>
+          {% endif %}
+        </div>
         <div class="header__user">
           {% if user.avatar %}
           <img src="{{ user.avatar.url }}" alt="avatar" class="avatar" />

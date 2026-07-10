@@ -16,6 +16,12 @@ from django.contrib.auth.forms import (
 
 User = get_user_model()
 
+ROLE_CHOICES = [
+    (User.Role.MANAGER, "Manager"),
+    (User.Role.TECHNICIAN, "Technician"),
+    (User.Role.VIEWER, "Viewer"),
+]
+
 
 class StyledFormMixin:
     """Add the ``form-control`` class (and placeholders) to every field widget."""
@@ -38,8 +44,37 @@ class LoginForm(StyledFormMixin, AuthenticationForm):
         self._style_fields()
 
 
+class RegisterForm(StyledFormMixin, UserCreationForm):
+    email = forms.EmailField(required=True, label="Email")
+    first_name = forms.CharField(required=True, max_length=30, label="Họ")
+    last_name = forms.CharField(required=True, max_length=30, label="Tên")
+    role = forms.ChoiceField(choices=ROLE_CHOICES, label="Vai trò", initial=User.Role.VIEWER)
+
+    class Meta(UserCreationForm.Meta):
+        model = User
+        fields = ("username", "first_name", "last_name", "email", "role")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["username"].widget.attrs["placeholder"] = "Tên đăng nhập"
+        self.fields["first_name"].widget.attrs["placeholder"] = "Họ"
+        self.fields["last_name"].widget.attrs["placeholder"] = "Tên"
+        self.fields["email"].widget.attrs["placeholder"] = "Email"
+        self.fields["password1"].widget.attrs["placeholder"] = "Mật khẩu"
+        self.fields["password2"].widget.attrs["placeholder"] = "Xác nhận mật khẩu"
+        self._style_fields()
+
+    def clean_email(self):
+        email = self.cleaned_data.get("email")
+        if email and User.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError("Email này đã được sử dụng cho tài khoản khác.")
+        return email
+
+
 class UserCreateForm(StyledFormMixin, UserCreationForm):
     """Admin form for creating a new user (replaces public registration)."""
+
+    role = forms.ChoiceField(choices=ROLE_CHOICES, label="Vai trò")
 
     class Meta(UserCreationForm.Meta):
         model = User
@@ -55,11 +90,15 @@ class UserCreateForm(StyledFormMixin, UserCreationForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["role"].choices = ROLE_CHOICES
+        self.fields["role"].initial = User.Role.VIEWER
         self._style_fields()
 
 
 class UserUpdateForm(StyledFormMixin, forms.ModelForm):
     """Admin form for editing an existing user (without changing password)."""
+
+    role = forms.ChoiceField(choices=ROLE_CHOICES, label="Vai trò")
 
     class Meta:
         model = User

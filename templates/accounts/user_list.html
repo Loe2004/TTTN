@@ -6,7 +6,8 @@
 <div class="page__header">
   <h1>Người dùng</h1>
   <div style="display: flex; gap: 8px">
-    <button id="bulkDeactivateBtn" class="btn btn--danger" style="display: none"><i data-lucide="lock"></i> Khóa đã chọn (<span id="selectedCount">0</span>)</button>
+    <button id="bulkDeactivateBtn" class="btn btn--danger" style="display: none"><i data-lucide="lock"></i> Khóa đã chọn (<span id="selectedCountDeactivate">0</span>)</button>
+    <button id="bulkActivateBtn" class="btn btn--success" style="display: none"><i data-lucide="unlock"></i> Mở khóa đã chọn (<span id="selectedCountActivate">0</span>)</button>
     <a href="{% url 'accounts:user_add' %}" class="btn btn--primary"><i data-lucide="plus"></i> Thêm người dùng</a>
   </div>
 </div>
@@ -15,6 +16,26 @@
   {% csrf_token %}
   <input type="hidden" name="ids" id="deactivateIds" />
 </form>
+
+<form id="bulkActivateForm" method="post" action="{% url 'accounts:user_bulk_activate' %}" style="display: none">
+  {% csrf_token %}
+  <input type="hidden" name="ids" id="activateIds" />
+</form>
+
+<form id="actionForm" method="post" action="" style="display: none">
+  {% csrf_token %}
+</form>
+
+<div id="confirmModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+  <div style="background: #fff; padding: 24px; border-radius: 8px; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+    <h3 style="margin-top: 0; margin-bottom: 16px;">Xác nhận</h3>
+    <p id="confirmMessage" style="margin-bottom: 24px;">Bạn có chắc chắn muốn thực hiện thao tác này?</p>
+    <div style="display: flex; gap: 12px; justify-content: center;">
+      <button id="confirmYes" class="btn btn--primary">Có</button>
+      <button id="confirmNo" class="btn btn--ghost">Không</button>
+    </div>
+  </div>
+</div>
 
 <div class="utility-bar">
   <form method="get" style="display: flex; gap: 8px">
@@ -64,8 +85,12 @@
         </td>
         <td style="text-align: right">
           <a href="{% url 'accounts:user_edit' u.pk %}" class="btn btn--ghost btn--sm">Sửa</a>
-          {% if u != request.user and u.is_active %}
-          <a href="{% url 'accounts:user_delete' u.pk %}" class="btn btn--danger btn--sm">Khóa</a>
+          {% if u != request.user %}
+            {% if u.is_active %}
+            <button type="button" class="btn btn--danger btn--sm action-btn" data-action="khóa" data-username="{{ u.username }}" data-url="{% url 'accounts:user_delete' u.pk %}">Khóa</button>
+            {% else %}
+            <button type="button" class="btn btn--success btn--sm action-btn" data-action="mở khóa" data-username="{{ u.username }}" data-url="{% url 'accounts:user_unlock' u.pk %}">Mở khóa</button>
+            {% endif %}
           {% endif %}
         </td>
       </tr>
@@ -97,14 +122,27 @@
     const selectAll = document.getElementById('selectAll');
     const checkboxes = document.querySelectorAll('.item-checkbox');
     const bulkDeactivateBtn = document.getElementById('bulkDeactivateBtn');
-    const selectedCount = document.getElementById('selectedCount');
+    const bulkActivateBtn = document.getElementById('bulkActivateBtn');
+    const selectedCountDeactivate = document.getElementById('selectedCountDeactivate');
+    const selectedCountActivate = document.getElementById('selectedCountActivate');
     const deactivateIds = document.getElementById('deactivateIds');
+    const activateIds = document.getElementById('activateIds');
     const bulkDeactivateForm = document.getElementById('bulkDeactivateForm');
+    const bulkActivateForm = document.getElementById('bulkActivateForm');
+
+    const confirmModal = document.getElementById('confirmModal');
+    const confirmMessage = document.getElementById('confirmMessage');
+    const confirmYes = document.getElementById('confirmYes');
+    const confirmNo = document.getElementById('confirmNo');
+    const actionForm = document.getElementById('actionForm');
 
     const updateUI = () => {
       const checked = Array.from(checkboxes).filter(cb => cb.checked);
-      selectedCount.textContent = checked.length;
-      bulkDeactivateBtn.style.display = checked.length > 0 ? 'inline-block' : 'none';
+      const count = checked.length;
+      selectedCountDeactivate.textContent = count;
+      selectedCountActivate.textContent = count;
+      bulkDeactivateBtn.style.display = count > 0 ? 'inline-block' : 'none';
+      bulkActivateBtn.style.display = count > 0 ? 'inline-block' : 'none';
     };
 
     selectAll.addEventListener('change', () => {
@@ -119,6 +157,26 @@
       });
     });
 
+    document.querySelectorAll('.action-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const action = btn.dataset.action;
+        const username = btn.dataset.username;
+        const url = btn.dataset.url;
+        
+        confirmMessage.textContent = `Bạn có chắc chắn muốn ${action} tài khoản "${username}"?`;
+        actionForm.action = url;
+        confirmModal.style.display = 'flex';
+      });
+    });
+
+    confirmNo.addEventListener('click', () => {
+      confirmModal.style.display = 'none';
+    });
+
+    confirmYes.addEventListener('click', () => {
+      actionForm.submit();
+    });
+
     bulkDeactivateBtn.addEventListener('click', () => {
       const ids = Array.from(checkboxes)
         .filter(cb => cb.checked)
@@ -128,6 +186,18 @@
       if (ids && confirm('Bạn có chắc muốn khóa các người dùng đã chọn?')) {
         deactivateIds.value = ids;
         bulkDeactivateForm.submit();
+      }
+    });
+
+    bulkActivateBtn.addEventListener('click', () => {
+      const ids = Array.from(checkboxes)
+        .filter(cb => cb.checked)
+        .map(cb => cb.value)
+        .join(',');
+      
+      if (ids && confirm('Bạn có chắc muốn mở khóa các người dùng đã chọn?')) {
+        activateIds.value = ids;
+        bulkActivateForm.submit();
       }
     });
   });

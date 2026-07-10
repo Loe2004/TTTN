@@ -25,6 +25,8 @@ class User(AbstractUser):
         default=Role.VIEWER,
         help_text="Role used for access control.",
     )
+    is_approved = models.BooleanField(default=False)
+    is_rejected = models.BooleanField(default=False)
     phone = models.CharField(max_length=20, blank=True)
     avatar = models.ImageField(upload_to="avatars/", blank=True, null=True)
 

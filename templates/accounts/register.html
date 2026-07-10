@@ -1,0 +1,55 @@
+{% extends "accounts/auth_base.html" %}
+{% block title %}Đăng ký — QR Device Manager{% endblock %}
+
+{% block content %}
+<h1 class="auth-card__title">Đăng ký tài khoản</h1>
+<p class="auth-card__subtitle">Tài khoản mới sẽ được gửi cho admin duyệt trước khi kích hoạt.</p>
+
+{% if form.non_field_errors %}
+<div class="alert alert--error">{{ form.non_field_errors }}</div>
+{% endif %}
+
+<form method="post" action="{% url 'accounts:register' %}">
+  {% csrf_token %}
+  <div class="form-group">
+    <label class="form-label" for="{{ form.username.id_for_label }}">Tên đăng nhập</label>
+    {{ form.username }}
+    {% if form.username.errors %}<div class="form-error">{{ form.username.errors|striptags }}</div>{% endif %}
+  </div>
+  <div class="form-group">
+    <label class="form-label" for="{{ form.first_name.id_for_label }}">Họ</label>
+    {{ form.first_name }}
+    {% if form.first_name.errors %}<div class="form-error">{{ form.first_name.errors|striptags }}</div>{% endif %}
+  </div>
+  <div class="form-group">
+    <label class="form-label" for="{{ form.last_name.id_for_label }}">Tên</label>
+    {{ form.last_name }}
+    {% if form.last_name.errors %}<div class="form-error">{{ form.last_name.errors|striptags }}</div>{% endif %}
+  </div>
+  <div class="form-group">
+    <label class="form-label" for="{{ form.email.id_for_label }}">Email</label>
+    {{ form.email }}
+    {% if form.email.errors %}<div class="form-error">{{ form.email.errors|striptags }}</div>{% endif %}
+  </div>
+  <div class="form-group">
+    <label class="form-label" for="{{ form.password1.id_for_label }}">Mật khẩu</label>
+    {{ form.password1 }}
+    {% if form.password1.errors %}<div class="form-error">{{ form.password1.errors|striptags }}</div>{% endif %}
+  </div>
+  <div class="form-group">
+    <label class="form-label" for="{{ form.password2.id_for_label }}">Xác nhận mật khẩu</label>
+    {{ form.password2 }}
+    {% if form.password2.errors %}<div class="form-error">{{ form.password2.errors|striptags }}</div>{% endif %}
+  </div>
+  <div class="form-group">
+    <label class="form-label" for="{{ form.role.id_for_label }}">Vai trò</label>
+    {{ form.role }}
+    {% if form.role.errors %}<div class="form-error">{{ form.role.errors|striptags }}</div>{% endif %}
+  </div>
+  <button type="submit" class="btn btn--primary btn--lg btn--block">Đăng ký</button>
+</form>
+
+<div class="auth-card__footer">
+  <a href="{% url 'accounts:login' %}">← Quay lại đăng nhập</a>
+</div>
+{% endblock %}

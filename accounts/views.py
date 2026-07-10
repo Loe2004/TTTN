@@ -12,7 +12,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
-from django.urls import reverse_lazy
+from django.shortcuts import redirect, get_object_or_404
+from django.urls import reverse, reverse_lazy
 from django.views.generic import (
     CreateView,
     DeleteView,
@@ -25,6 +26,7 @@ from django.views.generic import (
 from .forms import (
     LoginForm,
     ProfileForm,
+    RegisterForm,
     StyledPasswordChangeForm,
     StyledPasswordResetForm,
     StyledSetPasswordForm,
@@ -44,9 +46,44 @@ class LoginView(auth_views.LoginView):
     authentication_form = LoginForm
     redirect_authenticated_user = True
 
+    def form_valid(self, form):
+        user = form.get_user()
+        if not user.is_approved and not user.is_superuser and user.role != User.Role.ADMIN:
+            messages.error(self.request, "Tài khoản của bạn đang chờ admin duyệt.")
+            return redirect("accounts:login")
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        user = self.request.user
+        if user.is_superuser or user.role == User.Role.ADMIN:
+            return reverse("accounts:admin_dashboard")
+        return super().get_success_url()
+
 
 class LogoutView(auth_views.LogoutView):
     pass
+
+
+class RegisterView(SuccessMessageMixin, CreateView):
+    template_name = "accounts/register.html"
+    form_class = RegisterForm
+    success_url = reverse_lazy("accounts:login")
+    success_message = "Đăng ký thành công. Tài khoản của bạn đang chờ admin duyệt."
+
+    def form_valid(self, form):
+        user = form.save(commit=False)
+        # New registrations are pending approval and inactive until an admin approves.
+        user.is_approved = False
+        user.is_rejected = False
+        user.is_active = False
+        # Respect chosen role from the form (form restricts choices, excludes admin)
+        role = form.cleaned_data.get("role")
+        if role:
+            user.role = role
+        user.save()
+        # Store the registered user's id in session so we can show a status page
+        self.request.session["registered_user_id"] = user.pk
+        return redirect("accounts:register_status")
 
 
 class PasswordChangeView(SuccessMessageMixin, auth_views.PasswordChangeView):
@@ -124,6 +161,12 @@ class UserCreateView(AdminRequiredMixin, SuccessMessageMixin, CreateView):
     success_url = reverse_lazy("accounts:user_list")
     success_message = "Tạo người dùng thành công."
 
+    def form_valid(self, form):
+        user = form.save(commit=False)
+        user.is_approved = True
+        user.save()
+        return super().form_valid(form)
+
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["title"] = "Thêm người dùng"
@@ -169,9 +212,113 @@ class UserBulkDeactivateView(AdminRequiredMixin, View):
         return redirect("accounts:user_list")
 
 
+class UserUnlockView(AdminRequiredMixin, View):
+    def post(self, request, pk):
+        user = get_object_or_404(User, pk=pk)
+        if user != request.user:
+            user.is_active = True
+            user.save()
+            messages.success(request, f"Đã mở khóa người dùng {user.username}.")
+        return redirect("accounts:user_list")
+
+
+class UserBulkActivateView(AdminRequiredMixin, View):
+    def post(self, request):
+        ids = request.POST.get("ids", "").split(",")
+        valid_ids = [i for i in ids if i.isdigit() and int(i) != request.user.pk]
+        if valid_ids:
+            count = User.objects.filter(id__in=valid_ids).update(is_active=True)
+            messages.success(request, f"Đã mở khóa {count} người dùng.")
+        return redirect("accounts:user_list")
+
+
 # ---------------------------------------------------------------------------
 # Dashboard with statistics (Phase 7)
 # ---------------------------------------------------------------------------
+class AdminDashboardView(AdminRequiredMixin, TemplateView):
+    template_name = "accounts/admin_dashboard.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["pending_users"] = (
+            User.objects.filter(is_approved=False, is_rejected=False)
+            .exclude(role=User.Role.ADMIN)
+        )
+        ctx["all_users"] = User.objects.exclude(role=User.Role.ADMIN).order_by("-date_joined")[:10]
+        return ctx
+
+
+class PendingUserListView(AdminRequiredMixin, ListView):
+    model = User
+    template_name = "accounts/pending_user_list.html"
+    context_object_name = "users"
+    paginate_by = 50
+
+    def get_queryset(self):
+        return (
+            User.objects.filter(is_approved=False)
+            .exclude(role=User.Role.ADMIN)
+            .order_by("-date_joined")
+        )
+
+
+class ApproveUserView(AdminRequiredMixin, View):
+    def post(self, request, pk):
+        try:
+            user = User.objects.get(pk=pk)
+        except User.DoesNotExist:
+            messages.error(request, "Người dùng không tồn tại.")
+            return redirect("accounts:admin_dashboard")
+        user.is_approved = True
+        user.is_active = True
+        user.is_rejected = False
+        user.save()
+        messages.success(request, f"Đã duyệt tài khoản {user.username}.")
+        return redirect("accounts:admin_dashboard")
+
+
+class RejectUserView(AdminRequiredMixin, View):
+    def post(self, request, pk):
+        try:
+            user = User.objects.get(pk=pk)
+        except User.DoesNotExist:
+            messages.error(request, "Người dùng không tồn tại.")
+            return redirect("accounts:admin_dashboard")
+        user.is_active = False
+        user.is_approved = False
+        user.is_rejected = True
+        user.save()
+        messages.success(request, f"Đã từ chối tài khoản {user.username}.")
+        return redirect("accounts:admin_dashboard")
+
+
+class UserActionView(AdminRequiredMixin, View):
+    def post(self, request, pk):
+        try:
+            user = User.objects.get(pk=pk)
+        except User.DoesNotExist:
+            messages.error(request, "Người dùng không tồn tại.")
+            return redirect("accounts:admin_dashboard")
+
+        action = request.POST.get("action")
+        if action == "approve":
+            user.is_approved = True
+            user.is_active = True
+            user.is_rejected = False
+            user.save()
+            messages.success(request, f"Đã duyệt tài khoản {user.username}.")
+        elif action == "reject":
+            user.is_active = False
+            user.is_approved = False
+            user.is_rejected = True
+            user.save()
+            messages.success(request, f"Đã từ chối tài khoản {user.username}.")
+        else:
+            messages.error(request, "Hành động không hợp lệ.")
+
+        return redirect("accounts:admin_dashboard")
+
+
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = "dashboard.html"
 
@@ -201,4 +348,20 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 count=models.Count("devices")
             )
         )
+        return ctx
+
+
+class RegisterStatusView(TemplateView):
+    template_name = "accounts/register_status.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        user_id = self.request.session.get("registered_user_id")
+        user = None
+        if user_id:
+            try:
+                user = User.objects.get(pk=user_id)
+            except User.DoesNotExist:
+                user = None
+        ctx["registered_user"] = user
         return ctx
