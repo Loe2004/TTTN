@@ -45,10 +45,14 @@
           {% endif %}
         </td>
         <td style="text-align:right">
+          <a href="{% url 'devices:category_detail' c.pk %}" class="btn btn--ghost btn--sm">Xem</a>
           {% if user.is_manager_role %}
           <a href="{% url 'devices:category_edit' c.pk %}" class="btn btn--ghost btn--sm">Sửa</a>
           {% if c.is_active %}
-          <a href="{% url 'devices:category_delete' c.pk %}" class="btn btn--danger btn--sm">Khóa</a>
+          <form method="post" action="{% url 'devices:category_delete' c.pk %}" style="display: inline-block; margin: 0;" class="require-confirm" data-confirm="Bạn có muốn khóa danh mục {{ c.name }} không?" data-confirm-class="btn--danger">
+            {% csrf_token %}
+            <button type="submit" class="btn btn--danger btn--sm">Khóa</button>
+          </form>
           {% endif %}
           {% endif %}
         </td>

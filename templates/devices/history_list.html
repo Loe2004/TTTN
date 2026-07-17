@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Lịch sử thao tác — QR Device Manager{% endblock %}
+{% block header_title %}
+<h1 style="font-size:18px">Lịch sử thao tác hệ thống</h1>
+{% endblock %}
+
+{% block content %}
+<div class="page__header">
+  <div style="display: flex; gap: 12px; align-items: center;">
+    <a href="{% url 'accounts:admin_dashboard' %}" class="btn btn--ghost btn--icon">
+      <i data-lucide="arrow-left"></i>
+    </a>
+    <h1>Lịch sử thao tác</h1>
+  </div>
+</div>
+
+<div class="table-wrapper">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Thời gian</th>
+        <th>Người thực hiện</th>
+        <th>Hành động</th>
+        <th>Thiết bị</th>
+        <th style="text-align: right">Thao tác</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for h in histories %}
+      <tr>
+        <td class="text-muted">{{ h.created_at|date:"d/m/Y H:i" }}</td>
+        <td>{{ h.performed_by.get_full_name|default:h.performed_by.username|default:"Hệ thống" }}</td>
+        <td>
+          {% if h.action == 'CREATE' %}
+          <span class="badge badge--success">Thêm mới</span>
+          {% elif h.action == 'UPDATE' %}
+          <span class="badge badge--warning">Cập nhật</span>
+          {% elif h.action == 'DELETE' %}
+          <span class="badge badge--danger">Xóa / Khóa</span>
+          {% else %}
+          <span class="badge badge--muted">{{ h.get_action_display }}</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if h.device %}
+            <a href="{{ h.device.get_absolute_url }}">{{ h.device_name }}</a>
+          {% else %}
+            {{ h.device_name }}
+          {% endif %}
+        </td>
+        <td style="text-align: right">
+          <a href="{% url 'devices:history_detail' h.pk %}" class="btn btn--ghost btn--sm">
+            Xem chi tiết
+          </a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="5" class="text-muted" style="text-align: center">Chưa có lịch sử thao tác nào.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if is_paginated %}
+<div class="utility-bar" style="margin-top: 16px; justify-content: center; gap: 8px">
+  {% if page_obj.has_previous %}
+  <a href="?page={{ page_obj.previous_page_number }}" class="btn btn--ghost btn--sm">←</a>
+  {% endif %}
+  <span class="small">Trang {{ page_obj.number }}/{{ page_obj.paginator.num_pages }}</span>
+  {% if page_obj.has_next %}
+  <a href="?page={{ page_obj.next_page_number }}" class="btn btn--ghost btn--sm">→</a>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

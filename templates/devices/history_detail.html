@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Chi tiết lịch sử — QR Device Manager{% endblock %}
+{% block header_title %}
+<h1 style="font-size:18px">Chi tiết lịch sử</h1>
+{% endblock %}
+
+{% block content %}
+<div class="page__header">
+  <div style="display: flex; gap: 12px; align-items: center;">
+    <a href="javascript:history.back()" class="btn btn--ghost btn--icon">
+      <i data-lucide="arrow-left"></i>
+    </a>
+    <h1>Chi tiết lịch sử thao tác</h1>
+  </div>
+</div>
+
+<div class="card" style="margin-top: 16px;">
+  <div style="padding: 24px; border-bottom: 1px solid var(--border-color);">
+    <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 8px;">
+      Thiết bị: {{ history.device_name }}
+    </h2>
+    <p class="text-muted">Thực hiện bởi: <strong>{{ history.performed_by.get_full_name|default:history.performed_by.username|default:"Hệ thống" }}</strong> vào lúc {{ history.created_at|date:"d/m/Y H:i:s" }}</p>
+  </div>
+  
+  <div style="padding: 24px;">
+    <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 16px;">
+      Hành động: 
+      {% if history.action == 'CREATE' %}
+      <span class="badge badge--success">Thêm mới</span>
+      {% elif history.action == 'UPDATE' %}
+      <span class="badge badge--warning">Cập nhật</span>
+      {% elif history.action == 'DELETE' %}
+      <span class="badge badge--danger">Xóa / Khóa</span>
+      {% else %}
+      <span class="badge badge--muted">{{ history.get_action_display }}</span>
+      {% endif %}
+    </h3>
+
+    {% if history.action == 'UPDATE' %}
+      <h4 style="margin-bottom: 12px;">Các trường thông tin đã thay đổi:</h4>
+      <table class="table">
+        <thead>
+          <tr>
+            <th style="width: 200px;">Trường (Field)</th>
+            <th>Giá trị mới</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for field, diff in history.changes.items %}
+          <tr>
+            <td style="font-family: monospace; color: var(--text-muted)">{{ field }}</td>
+            <td>
+              {% if diff.old %}
+                <s class="text-muted">{{ diff.old }}</s> <i data-lucide="arrow-right" style="width: 14px; margin: 0 4px; vertical-align: middle;"></i> <strong>{{ diff.new }}</strong>
+              {% elif diff.new %}
+                <s class="text-muted"><em>(trống)</em></s> <i data-lucide="arrow-right" style="width: 14px; margin: 0 4px; vertical-align: middle;"></i> <strong>{{ diff.new }}</strong>
+              {% else %}
+                <strong>{{ diff }}</strong>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% elif history.action == 'CREATE' %}
+      <p>Thiết bị được thêm mới thành công vào hệ thống với các thông tin khởi tạo:</p>
+      <table class="table" style="margin-top: 12px;">
+        <thead>
+          <tr>
+            <th style="width: 200px;">Trường thông tin</th>
+            <th>Giá trị khởi tạo</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for field, val in history.changes.items %}
+          <tr>
+            <td style="font-family: monospace; color: var(--text-muted)">{{ field }}</td>
+            <td><strong>{{ val }}</strong></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+    {% elif history.action == 'DELETE' %}
+      <p>Thiết bị đã bị vô hiệu hóa (khóa) hoặc xóa khỏi hệ thống.</p>
+      <table class="table" style="margin-top: 12px;">
+        <thead>
+          <tr>
+            <th style="width: 200px;">Thông tin</th>
+            <th>Chi tiết lúc khóa</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for key, val in history.changes.items %}
+          <tr>
+            <td style="color: var(--text-muted)">{{ key }}</td>
+            <td><strong>{{ val }}</strong></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

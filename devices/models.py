@@ -158,3 +158,25 @@ class MaintenanceLog(TimeStampedModel):
 
     def __str__(self) -> str:
         return f"{self.device.name} — {self.action}"
+
+
+class DeviceHistory(TimeStampedModel):
+    """Log of creation, update, and deletion of devices."""
+    ACTION_CHOICES = (
+        ('CREATE', 'Thêm mới'),
+        ('UPDATE', 'Chỉnh sửa'),
+        ('DELETE', 'Khóa/Xóa'),
+    )
+    device = models.ForeignKey(Device, on_delete=models.SET_NULL, null=True, blank=True, related_name='history_logs')
+    device_name = models.CharField(max_length=200)
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    performed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    changes = models.JSONField(default=dict, blank=True)
+
+    class Meta:
+        verbose_name = "Device History"
+        verbose_name_plural = "Device Histories"
+        ordering = ("-created_at",)
+
+    def __str__(self):
+        return f"{self.get_action_display()} - {self.device_name}"

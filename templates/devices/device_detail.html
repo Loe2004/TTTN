@@ -3,15 +3,31 @@
 {% block header_title %}<h1 style="font-size:18px">Chi tiết thiết bị</h1>{% endblock %}
 
 {% block content %}
+{% if not device.is_active %}
+<div style="background-color: #fee2e2; color: #b91c1c; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; display: flex; align-items: center; gap: 8px;">
+  <i data-lucide="lock"></i>
+  <span><strong>Thiết bị này đã bị khóa.</strong> Không thể chỉnh sửa thông tin hay cập nhật nhật ký bảo trì.</span>
+</div>
+{% endif %}
 <div class="page__header">
   <h1>{{ device.name }}</h1>
   <div style="display: flex; gap: 8px">
     <a href="{% url 'devices:device_qr' device.pk %}" class="btn btn--ghost"><i data-lucide="qr-code"></i> In nhãn QR</a>
-    {% if user.is_staff_role %}
+    {% if user.is_staff_role and device.is_active %}
     <a href="{% url 'devices:device_edit' device.pk %}" class="btn btn--primary"><i data-lucide="edit"></i> Sửa</a>
     {% endif %}
-    {% if user.is_manager_role and device.is_active %}
-    <a href="{% url 'devices:device_delete' device.pk %}" class="btn btn--danger"><i data-lucide="lock"></i> Khóa</a>
+    {% if user.is_manager_role %}
+      {% if device.is_active %}
+      <form method="post" action="{% url 'devices:device_delete' device.pk %}" style="display: inline-block; margin: 0;" class="require-confirm" data-confirm="Bạn có muốn khóa thiết bị {{ device.name }} không?" data-confirm-class="btn--danger">
+        {% csrf_token %}
+        <button type="submit" class="btn btn--danger"><i data-lucide="lock"></i> Khóa</button>
+      </form>
+      {% else %}
+      <form method="post" action="{% url 'devices:device_unlock' device.pk %}" style="display: inline-block; margin: 0;" class="require-confirm" data-confirm="Bạn có muốn mở khóa thiết bị {{ device.name }} không?" data-confirm-class="btn--success">
+        {% csrf_token %}
+        <button type="submit" class="btn btn--success"><i data-lucide="unlock"></i> Mở khóa</button>
+      </form>
+      {% endif %}
     {% endif %}
   </div>
 </div>
@@ -58,7 +74,7 @@
 
 <div class="card" style="margin-top: 24px">
   <h2>Nhật ký bảo trì</h2>
-  {% if user.is_staff_role %}
+  {% if user.is_staff_role and device.is_active %}
   <form method="post" action="{% url 'devices:log_add' device.pk %}" style="margin-top: 16px">
     {% csrf_token %}
     <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 12px; align-items: end">

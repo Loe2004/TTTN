@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Mở khóa thiết bị — QR Device Manager{% endblock %}
+{% block header_title %}<h1 style="font-size:18px">Mở khóa thiết bị</h1>{% endblock %}
+
+{% block content %}
+<div class="page__header"><h1>Mở khóa thiết bị</h1></div>
+<div class="card" style="max-width: 500px">
+  <p style="font-size: 16px;">Bạn có muốn mở khóa thiết bị <strong>{{ object.name }}</strong> không?</p>
+  <form method="post">
+    {% csrf_token %}
+    <div style="display: flex; gap: 8px; margin-top: 24px">
+      <button type="submit" class="btn btn--success">Có</button>
+      <a href="{% url 'devices:device_detail' object.pk %}" class="btn btn--ghost">Không</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

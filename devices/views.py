@@ -23,10 +23,10 @@ from django.views.generic import (
     View,
 )
 
-from accounts.mixins import ManagerRequiredMixin, StaffRequiredMixin
+from accounts.mixins import ManagerRequiredMixin, StaffRequiredMixin, AdminRequiredMixin
 
 from .forms import CategoryForm, DeviceForm, LocationForm, MaintenanceLogForm
-from .models import Category, Device, Location, MaintenanceLog
+from .models import Category, Device, Location, MaintenanceLog, DeviceHistory
 from .utils import assign_qr_code
 
 
@@ -96,6 +96,19 @@ class DeviceCreateView(StaffRequiredMixin, SuccessMessageMixin, CreateView):
 
     def form_valid(self, form):
         response = super().form_valid(form)
+        
+        created_data = {}
+        for field in form.cleaned_data:
+            val = form.cleaned_data[field]
+            created_data[field] = str(val) if val is not None else ""
+            
+        DeviceHistory.objects.create(
+            device=self.object,
+            device_name=self.object.name,
+            action='CREATE',
+            performed_by=self.request.user,
+            changes=created_data
+        )
         # Generate and store the QR code (uploaded to Cloudinary).
         assign_qr_code(self.object, request=self.request)
         return response
@@ -112,8 +125,37 @@ class DeviceUpdateView(StaffRequiredMixin, SuccessMessageMixin, UpdateView):
     template_name = "devices/device_form.html"
     success_message = "Đã cập nhật thiết bị."
 
+    def dispatch(self, request, *args, **kwargs):
+        obj = self.get_object()
+        if not obj.is_active:
+            messages.error(request, "Thiết bị này đã bị khóa, không thể chỉnh sửa.")
+            return redirect("devices:device_detail", pk=obj.pk)
+        return super().dispatch(request, *args, **kwargs)
+
     def form_valid(self, form):
+        changes = {}
+        old_obj = Device.objects.get(pk=self.object.pk)
+        
+        for field in form.changed_data:
+            old_val = getattr(old_obj, field, "")
+            new_val = form.cleaned_data[field]
+            
+            changes[field] = {
+                'old': str(old_val) if old_val is not None else "",
+                'new': str(new_val) if new_val is not None else ""
+            }
+            
         response = super().form_valid(form)
+        
+        if changes:
+            DeviceHistory.objects.create(
+                device=self.object,
+                device_name=self.object.name,
+                action='UPDATE',
+                performed_by=self.request.user,
+                changes=changes
+            )
+            
         if not self.object.qr_code:
             assign_qr_code(self.object, request=self.request)
         return response
@@ -133,9 +175,50 @@ class DeviceDeleteView(ManagerRequiredMixin, DeleteView):
         # Soft delete: just set is_active to False
         self.object.is_active = False
         self.object.save()
+        
+        deleted_context = {
+            "Trạng thái cũ": self.object.get_status_display(),
+            "Số Serial": self.object.serial_number,
+            "Danh mục": str(self.object.category) if self.object.category else "",
+            "Vị trí": str(self.object.location) if self.object.location else "",
+            "Ghi chú": "Đã chuyển sang trạng thái Ngừng hoạt động (Khóa thiết bị)"
+        }
+        
+        DeviceHistory.objects.create(
+            device=self.object,
+            device_name=self.object.name,
+            action='DELETE',
+            performed_by=self.request.user,
+            changes=deleted_context
+        )
         messages.success(self.request, "Đã khóa thiết bị.")
         return redirect(self.success_url)
 
+
+class DeviceUnlockView(ManagerRequiredMixin, View):
+    def get(self, request, pk):
+        device = get_object_or_404(Device, pk=pk)
+        return render(request, "devices/device_confirm_unlock.html", {"object": device})
+        
+    def post(self, request, pk):
+        device = get_object_or_404(Device, pk=pk)
+        device.is_active = True
+        device.status = Device.Status.ACTIVE
+        device.save()
+        
+        unlock_context = {
+            "Trạng thái mới": device.get_status_display(),
+            "Ghi chú": "Đã mở khóa thiết bị (kích hoạt lại và chuyển về trạng thái Hoạt động)"
+        }
+        DeviceHistory.objects.create(
+            device=device,
+            device_name=device.name,
+            action='UPDATE',
+            performed_by=request.user,
+            changes=unlock_context
+        )
+        messages.success(request, "Đã mở khóa thiết bị.")
+        return redirect("devices:device_detail", pk=device.pk)
 
 class DeviceBulkDeactivateView(ManagerRequiredMixin, View):
     """Deactivate multiple devices at once."""
@@ -144,9 +227,66 @@ class DeviceBulkDeactivateView(ManagerRequiredMixin, View):
         ids = request.POST.get("ids", "").split(",")
         valid_ids = [i for i in ids if i.isdigit()]
         if valid_ids:
-            count = Device.objects.filter(id__in=valid_ids).update(is_active=False)
+            devices = Device.objects.filter(id__in=valid_ids)
+            for d in devices:
+                deleted_context = {
+                    "Trạng thái cũ": d.get_status_display(),
+                    "Số Serial": d.serial_number,
+                    "Danh mục": str(d.category) if d.category else "",
+                    "Vị trí": str(d.location) if d.location else "",
+                    "Ghi chú": "Thao tác khóa hàng loạt"
+                }
+                DeviceHistory.objects.create(
+                    device=d,
+                    device_name=d.name,
+                    action='DELETE',
+                    performed_by=request.user,
+                    changes=deleted_context
+                )
+            count = devices.update(is_active=False)
             messages.success(request, f"Đã khóa {count} thiết bị.")
         return redirect("devices:device_list")
+
+
+class DeviceBulkActivateView(ManagerRequiredMixin, View):
+    """Activate multiple devices at once."""
+
+    def post(self, request):
+        ids = request.POST.get("ids", "").split(",")
+        valid_ids = [i for i in ids if i.isdigit()]
+        if valid_ids:
+            devices = Device.objects.filter(id__in=valid_ids)
+            for d in devices:
+                unlock_context = {
+                    "Trạng thái mới": Device.Status.ACTIVE.label,
+                    "Ghi chú": "Thao tác mở khóa hàng loạt"
+                }
+                DeviceHistory.objects.create(
+                    device=d,
+                    device_name=d.name,
+                    action='UPDATE',
+                    performed_by=request.user,
+                    changes=unlock_context
+                )
+            count = devices.update(is_active=True, status=Device.Status.ACTIVE)
+            messages.success(request, f"Đã mở khóa {count} thiết bị.")
+        return redirect("devices:device_list")
+
+
+# ---------------------------------------------------------------------------
+# Device History
+# ---------------------------------------------------------------------------
+class DeviceHistoryListView(AdminRequiredMixin, ListView):
+    model = DeviceHistory
+    template_name = "devices/history_list.html"
+    context_object_name = "histories"
+    paginate_by = 20
+
+
+class DeviceHistoryDetailView(AdminRequiredMixin, DetailView):
+    model = DeviceHistory
+    template_name = "devices/history_detail.html"
+    context_object_name = "history"
 
 
 # ---------------------------------------------------------------------------
@@ -157,6 +297,10 @@ class MaintenanceLogCreateView(StaffRequiredMixin, View):
 
     def post(self, request, device_pk):
         device = get_object_or_404(Device, pk=device_pk)
+        if not device.is_active:
+            messages.error(request, "Thiết bị này đã bị khóa, không thể cập nhật bảo trì.")
+            return redirect("devices:device_detail", pk=device.pk)
+
         form = MaintenanceLogForm(request.POST)
         if form.is_valid():
             log = form.save(commit=False)
@@ -176,6 +320,17 @@ class CategoryListView(LoginRequiredMixin, ListView):
     model = Category
     template_name = "devices/category_list.html"
     context_object_name = "categories"
+
+
+class CategoryDetailView(LoginRequiredMixin, DetailView):
+    model = Category
+    template_name = "devices/category_detail.html"
+    context_object_name = "category"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["devices"] = self.object.devices.all().order_by("-created_at")
+        return ctx
 
 
 class CategoryCreateView(ManagerRequiredMixin, SuccessMessageMixin, CreateView):
@@ -235,6 +390,17 @@ class LocationListView(LoginRequiredMixin, ListView):
     model = Location
     template_name = "devices/location_list.html"
     context_object_name = "locations"
+
+
+class LocationDetailView(LoginRequiredMixin, DetailView):
+    model = Location
+    template_name = "devices/location_detail.html"
+    context_object_name = "location"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["devices"] = self.object.devices.all().order_by("-created_at")
+        return ctx
 
 
 class LocationCreateView(ManagerRequiredMixin, SuccessMessageMixin, CreateView):

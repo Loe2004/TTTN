@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}{{ location.name }} — QR Device Manager{% endblock %}
+{% block header_title %}<h1 style="font-size:18px">Chi tiết Vị trí</h1>{% endblock %}
+
+{% block content %}
+<div class="page__header">
+  <h1>{{ location.name }}</h1>
+  <div style="display: flex; gap: 8px">
+    <a href="{% url 'devices:location_list' %}" class="btn btn--ghost">Quay lại</a>
+    {% if user.is_manager_role %}
+    <a href="{% url 'devices:location_edit' location.pk %}" class="btn btn--primary"><i data-lucide="edit"></i> Sửa vị trí</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card" style="margin-bottom: 24px;">
+  <h2>Thông tin vị trí</h2>
+  <table class="table" style="margin-top: 16px;">
+    <tbody>
+      <tr><td style="width: 200px"><strong>Tên vị trí</strong></td><td>{{ location.name }}</td></tr>
+      <tr><td><strong>Tòa nhà</strong></td><td>{{ location.building|default:"—" }}</td></tr>
+      <tr><td><strong>Phòng</strong></td><td>{{ location.room|default:"—" }}</td></tr>
+      <tr><td><strong>Mô tả</strong></td><td>{{ location.description|default:"—" }}</td></tr>
+      <tr><td><strong>Trạng thái</strong></td><td>
+        {% if location.is_active %}
+        <span class="badge badge--success">Hoạt động</span>
+        {% else %}
+        <span class="badge badge--danger">Đã khóa</span>
+        {% endif %}
+      </td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h2>Thiết bị tại vị trí này ({{ devices.count }})</h2>
+  <div class="table-wrapper" style="margin-top: 16px">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Tên thiết bị</th>
+          <th>Serial</th>
+          <th>Danh mục</th>
+          <th>Trạng thái</th>
+          <th style="text-align: right">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in devices %}
+        <tr {% if not d.is_active %}style="opacity: 0.6; background: #f9f9f9"{% endif %}>
+          <td><a href="{% url 'devices:device_detail' d.pk %}"><strong>{{ d.name }}</strong></a></td>
+          <td>{{ d.serial_number|default:"—" }}</td>
+          <td>{{ d.category.name|default:"—" }}</td>
+          <td><span class="badge {{ d.status_badge_class }}">{{ d.get_status_display }}</span></td>
+          <td style="text-align: right">
+            <a href="{% url 'devices:device_detail' d.pk %}" class="btn btn--ghost btn--sm">Xem chi tiết</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="text-muted" style="text-align: center">Không có thiết bị nào tại vị trí này.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

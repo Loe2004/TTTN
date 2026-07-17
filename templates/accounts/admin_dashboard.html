@@ -71,4 +71,58 @@
     {% endif %}
   </div>
 </div>
+
+<div class="card" style="margin-top: 24px;">
+  <h2>Lịch sử hoạt động thiết bị</h2>
+  <p class="text-muted">Nhật ký thêm mới, sửa chữa, khóa và xóa thiết bị của các kỹ thuật viên và quản lý.</p>
+  <div style="margin-top: 16px">
+    <a href="{% url 'devices:history_list' %}" class="btn btn--primary">Xem tất cả lịch sử</a>
+  </div>
+  {% if recent_histories %}
+  <div class="table-wrapper" style="margin-top: 16px">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Thời gian</th>
+          <th>Người thực hiện</th>
+          <th>Hành động</th>
+          <th>Thiết bị</th>
+          <th style="text-align: right">Chi tiết</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for h in recent_histories %}
+        <tr>
+          <td class="text-muted">{{ h.created_at|date:"d/m/Y H:i" }}</td>
+          <td>{{ h.performed_by.get_full_name|default:h.performed_by.username|default:"Hệ thống" }}</td>
+          <td>
+            {% if h.action == 'CREATE' %}
+            <span class="badge badge--success">Thêm mới</span>
+            {% elif h.action == 'UPDATE' %}
+            <span class="badge badge--warning">Cập nhật</span>
+            {% elif h.action == 'DELETE' %}
+            <span class="badge badge--danger">Xóa / Khóa</span>
+            {% else %}
+            <span class="badge badge--muted">{{ h.get_action_display }}</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if h.device %}
+              <a href="{{ h.device.get_absolute_url }}">{{ h.device_name }}</a>
+            {% else %}
+              {{ h.device_name }}
+            {% endif %}
+          </td>
+          <td style="text-align: right">
+            <a href="{% url 'devices:history_detail' h.pk %}" class="btn btn--ghost btn--sm">Chi tiết</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-muted" style="margin-top: 16px">Chưa có hoạt động nào được ghi nhận.</p>
+  {% endif %}
+</div>
 {% endblock %}

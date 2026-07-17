@@ -13,6 +13,7 @@ urlpatterns = [
     path(
         "<int:pk>/delete/", views.DeviceDeleteView.as_view(), name="device_delete"
     ),
+    path("<int:pk>/unlock/", views.DeviceUnlockView.as_view(), name="device_unlock"),
     path("<int:pk>/qr/", views.DeviceQRView.as_view(), name="device_qr"),
     path("bulk-qr/", views.BulkDeviceQRView.as_view(), name="bulk_qr"),
     path(
@@ -20,6 +21,13 @@ urlpatterns = [
         views.DeviceBulkDeactivateView.as_view(),
         name="bulk_deactivate",
     ),
+    path(
+        "bulk-activate/",
+        views.DeviceBulkActivateView.as_view(),
+        name="bulk_activate",
+    ),
+    path("history/", views.DeviceHistoryListView.as_view(), name="history_list"),
+    path("history/<int:pk>/", views.DeviceHistoryDetailView.as_view(), name="history_detail"),
     # Maintenance logs
     path(
         "<int:device_pk>/logs/add/",
@@ -37,6 +45,11 @@ urlpatterns = [
         "categories/<int:pk>/edit/",
         views.CategoryUpdateView.as_view(),
         name="category_edit",
+    ),
+    path(
+        "categories/<int:pk>/",
+        views.CategoryDetailView.as_view(),
+        name="category_detail",
     ),
     path(
         "categories/<int:pk>/delete/",
@@ -57,6 +70,11 @@ urlpatterns = [
         "locations/<int:pk>/edit/",
         views.LocationUpdateView.as_view(),
         name="location_edit",
+    ),
+    path(
+        "locations/<int:pk>/",
+        views.LocationDetailView.as_view(),
+        name="location_detail",
     ),
     path(
         "locations/<int:pk>/delete/",

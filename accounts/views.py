@@ -23,6 +23,8 @@ from django.views.generic import (
     View,
 )
 
+from devices.models import Device, DeviceHistory
+
 from .forms import (
     LoginForm,
     ProfileForm,
@@ -245,6 +247,7 @@ class AdminDashboardView(AdminRequiredMixin, TemplateView):
             .exclude(role=User.Role.ADMIN)
         )
         ctx["all_users"] = User.objects.exclude(role=User.Role.ADMIN).order_by("-date_joined")[:10]
+        ctx["recent_histories"] = DeviceHistory.objects.select_related('performed_by', 'device').all()[:100]
         return ctx
 
 
