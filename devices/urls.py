@@ -57,6 +57,11 @@ urlpatterns = [
         name="category_delete",
     ),
     path(
+        "categories/<int:pk>/unlock/",
+        views.CategoryUnlockView.as_view(),
+        name="category_unlock",
+    ),
+    path(
         "categories/bulk-deactivate/",
         views.CategoryBulkDeactivateView.as_view(),
         name="category_bulk_deactivate",
@@ -80,6 +85,11 @@ urlpatterns = [
         "locations/<int:pk>/delete/",
         views.LocationDeleteView.as_view(),
         name="location_delete",
+    ),
+    path(
+        "locations/<int:pk>/unlock/",
+        views.LocationUnlockView.as_view(),
+        name="location_unlock",
     ),
     path(
         "locations/bulk-deactivate/",

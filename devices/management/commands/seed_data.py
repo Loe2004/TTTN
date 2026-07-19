@@ -37,7 +37,6 @@ LOCATIONS = [
     ("Phòng họp lớn", "Tòa A", "P.301"),
     ("Phòng Server", "Tòa B", "P.B05"),
     ("Kho thiết bị", "Tòa B", "Kho 1"),
-    ("Lễ tân", "Tòa A", "Sảnh"),
 ]
 
 MANUFACTURERS = ["Dell", "HP", "Lenovo", "Asus", "Acer", "Cisco", "Canon", "Epson", "Samsung", "LG"]

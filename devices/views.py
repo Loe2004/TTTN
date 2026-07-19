@@ -373,6 +373,15 @@ class CategoryDeleteView(ManagerRequiredMixin, DeleteView):
         return redirect(self.success_url)
 
 
+class CategoryUnlockView(ManagerRequiredMixin, View):
+    def post(self, request, pk):
+        category = get_object_or_404(Category, pk=pk)
+        category.is_active = True
+        category.save()
+        messages.success(request, "Đã mở khóa danh mục.")
+        return redirect("devices:category_list")
+
+
 class CategoryBulkDeactivateView(ManagerRequiredMixin, View):
     def post(self, request):
         ids = request.POST.get("ids", "").split(",")
@@ -441,6 +450,15 @@ class LocationDeleteView(ManagerRequiredMixin, DeleteView):
         self.object.save()
         messages.success(self.request, "Đã khóa vị trí.")
         return redirect(self.success_url)
+
+
+class LocationUnlockView(ManagerRequiredMixin, View):
+    def post(self, request, pk):
+        location = get_object_or_404(Location, pk=pk)
+        location.is_active = True
+        location.save()
+        messages.success(request, "Đã mở khóa vị trí.")
+        return redirect("devices:location_list")
 
 
 class LocationBulkDeactivateView(ManagerRequiredMixin, View):
