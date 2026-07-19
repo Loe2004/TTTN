@@ -34,6 +34,16 @@
   --header-h: 64px;
 }
 
+body.dark-mode {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --text-dark: #f8fafc;
+  --text-muted: #94a3b8;
+  --border: #334155;
+  --input-border: #475569;
+  --table-head: #0f172a;
+}
+
 * {
   box-sizing: border-box;
 }
