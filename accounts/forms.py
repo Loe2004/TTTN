@@ -84,14 +84,31 @@ class UserCreateForm(StyledFormMixin, UserCreationForm):
             "last_name",
             "email",
             "role",
-            "phone",
             "is_active",
         )
+        labels = {
+            "username": "Tên đăng nhập",
+            "first_name": "Họ",
+            "last_name": "Tên",
+            "email": "Email",
+            "role": "Vai trò",
+            "is_active": "Trạng thái hoạt động",
+        }
+        help_texts = {
+            "username": "Bắt buộc. 150 ký tự trở xuống. Chỉ chứa chữ cái, số và @/./+/-/_.",
+            "is_active": "Chỉ định xem tài khoản có được phép đăng nhập hay không.",
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["role"].choices = ROLE_CHOICES
         self.fields["role"].initial = User.Role.VIEWER
+        if "password1" in self.fields:
+            self.fields["password1"].label = "Mật khẩu"
+            self.fields["password1"].help_text = ""
+        if "password2" in self.fields:
+            self.fields["password2"].label = "Xác nhận mật khẩu"
+            self.fields["password2"].help_text = "Nhập lại mật khẩu để xác nhận."
         self._style_fields()
 
 
@@ -108,10 +125,22 @@ class UserUpdateForm(StyledFormMixin, forms.ModelForm):
             "last_name",
             "email",
             "role",
-            "phone",
             "avatar",
             "is_active",
         )
+        labels = {
+            "username": "Tên đăng nhập",
+            "first_name": "Họ",
+            "last_name": "Tên",
+            "email": "Email",
+            "role": "Vai trò",
+            "avatar": "Ảnh đại diện",
+            "is_active": "Trạng thái hoạt động",
+        }
+        help_texts = {
+            "username": "Bắt buộc. 150 ký tự trở xuống. Chỉ chứa chữ cái, số và @/./+/-/_.",
+            "is_active": "Chỉ định xem tài khoản có được phép đăng nhập hay không.",
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -124,6 +153,13 @@ class ProfileForm(StyledFormMixin, forms.ModelForm):
     class Meta:
         model = User
         fields = ("first_name", "last_name", "email", "phone", "avatar")
+        labels = {
+            "first_name": "Họ",
+            "last_name": "Tên",
+            "email": "Email",
+            "phone": "Số điện thoại",
+            "avatar": "Ảnh đại diện",
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
