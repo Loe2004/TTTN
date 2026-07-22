@@ -537,3 +537,99 @@ select.form-control {
   width: 16px;
   height: 16px;
 }
+
+/* ==========================================================================
+   Mobile Responsiveness
+   ========================================================================== */
+.header__menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+.header__menu-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+body.dark-mode .header__menu-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 40;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+@media (max-width: 860px) {
+  .header__menu-btn {
+    display: flex;
+  }
+  
+  .sidebar {
+    transform: translateX(-100%);
+    z-index: 50;
+    transition: transform 0.3s ease;
+  }
+  
+  .sidebar.is-open {
+    transform: translateX(0);
+  }
+  
+  .sidebar-overlay {
+    display: block;
+    pointer-events: none;
+  }
+  
+  .sidebar-overlay.is-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  
+  .main {
+    margin-left: 0;
+    width: 100vw;
+  }
+  
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .page__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .header__user {
+    gap: 8px;
+  }
+  
+  .header__user > div > div:first-child {
+    display: none; /* Hide username text on mobile to save space */
+  }
+  
+  .auth-card {
+    padding: var(--space-4);
+  }
+  
+  /* Make search forms stack on mobile */
+  .card > form {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+  
+  .card > form > div {
+    max-width: 100% !important;
+  }
+}

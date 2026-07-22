@@ -16,7 +16,9 @@
 </head>
 <body>
   <div class="app-shell">
-    <aside class="sidebar">
+    <!-- Mobile Sidebar Overlay -->
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+    <aside class="sidebar" id="sidebar">
       <div class="sidebar__brand" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
         <div style="display: flex; align-items: center; gap: 8px;">
           <i data-lucide="package"></i>
@@ -71,6 +73,9 @@
     <div class="main">
       <header class="header">
         <div class="header__left">
+          <button id="mobileMenuBtn" class="header__menu-btn">
+            <i data-lucide="menu"></i>
+          </button>
           <div>{% block header_title %}{% endblock %}</div>
           {% if user.is_superuser or user.role == 'admin' %}
           <a href="{% url 'accounts:admin_dashboard' %}" class="header__link"><i data-lucide="layout-dashboard"></i> Admin Dashboard</a>
@@ -181,6 +186,22 @@
             themeIcon.setAttribute('data-lucide', 'moon');
           }
           lucide.createIcons();
+        });
+      }
+
+      // Mobile menu logic
+      const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+      const sidebar = document.getElementById('sidebar');
+      const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+      if (mobileMenuBtn && sidebar && sidebarOverlay) {
+        mobileMenuBtn.addEventListener('click', () => {
+          sidebar.classList.add('is-open');
+          sidebarOverlay.classList.add('is-open');
+        });
+        sidebarOverlay.addEventListener('click', () => {
+          sidebar.classList.remove('is-open');
+          sidebarOverlay.classList.remove('is-open');
         });
       }
     });
