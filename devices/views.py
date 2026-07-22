@@ -321,6 +321,18 @@ class CategoryListView(LoginRequiredMixin, ListView):
     template_name = "devices/category_list.html"
     context_object_name = "categories"
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        q = self.request.GET.get("q", "").strip()
+        if q:
+            qs = qs.filter(name__icontains=q)
+        return qs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["q"] = self.request.GET.get("q", "")
+        return ctx
+
 
 class CategoryDetailView(LoginRequiredMixin, DetailView):
     model = Category
@@ -399,6 +411,18 @@ class LocationListView(LoginRequiredMixin, ListView):
     model = Location
     template_name = "devices/location_list.html"
     context_object_name = "locations"
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        q = self.request.GET.get("q", "").strip()
+        if q:
+            qs = qs.filter(name__icontains=q)
+        return qs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["q"] = self.request.GET.get("q", "")
+        return ctx
 
 
 class LocationDetailView(LoginRequiredMixin, DetailView):
