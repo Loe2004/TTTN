@@ -169,16 +169,33 @@ class ProfileForm(StyledFormMixin, forms.ModelForm):
 class StyledPasswordChangeForm(StyledFormMixin, PasswordChangeForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if "old_password" in self.fields:
+            self.fields["old_password"].label = "Mật khẩu cũ"
+        if "new_password1" in self.fields:
+            self.fields["new_password1"].label = "Mật khẩu mới"
+            self.fields["new_password1"].help_text = "Mật khẩu phải chứa ít nhất 8 ký tự và không được quá giống với thông tin cá nhân."
+        if "new_password2" in self.fields:
+            self.fields["new_password2"].label = "Xác nhận mật khẩu mới"
+            self.fields["new_password2"].help_text = "Nhập lại mật khẩu mới để xác nhận."
         self._style_fields()
 
 
 class StyledPasswordResetForm(StyledFormMixin, PasswordResetForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if "email" in self.fields:
+            self.fields["email"].label = "Địa chỉ Email"
+            self.fields["email"].widget.attrs["placeholder"] = "Nhập email của bạn"
         self._style_fields()
 
 
 class StyledSetPasswordForm(StyledFormMixin, SetPasswordForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if "new_password1" in self.fields:
+            self.fields["new_password1"].label = "Mật khẩu mới"
+            self.fields["new_password1"].help_text = "Mật khẩu phải chứa ít nhất 8 ký tự và không được quá giống với thông tin cá nhân."
+        if "new_password2" in self.fields:
+            self.fields["new_password2"].label = "Xác nhận mật khẩu mới"
+            self.fields["new_password2"].help_text = "Nhập lại mật khẩu mới để xác nhận."
         self._style_fields()
