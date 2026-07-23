@@ -1,5 +1,6 @@
 {% extends "base.html" %}
-{% block title %}{{ device.name }} — QR Device Manager{% endblock %}
+{% load humanize %}
+{% block title %}Thiết bị {{ device.name }} — QR Device Manager{% endblock %}
 {% block header_title %}<h1 style="font-size:18px">Chi tiết thiết bị</h1>{% endblock %}
 
 {% block content %}
@@ -110,7 +111,7 @@
           <td>{{ log.performed_at|date:"d/m/Y H:i" }}</td>
           <td>{{ log.action }}</td>
           <td>{{ log.performed_by|default:"—" }}</td>
-          <td>{{ log.cost }}</td>
+          <td><span class="cost-value">{{ log.cost|default:"0" }}</span> VNĐ</td>
           <td>{{ log.notes|default:"—" }}</td>
         </tr>
         {% empty %}
@@ -120,4 +121,20 @@
     </table>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.cost-value').forEach(el => {
+      let rawText = el.textContent.trim();
+      // Remove intcomma formatting if Django applied it
+      rawText = rawText.replace(/,/g, '').replace(/\./g, '');
+      let val = parseInt(rawText, 10);
+      if (!isNaN(val)) {
+        el.textContent = val.toLocaleString('vi-VN');
+      }
+    });
+  });
+</script>
 {% endblock %}

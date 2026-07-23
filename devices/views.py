@@ -84,7 +84,7 @@ class DeviceDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["logs"] = self.object.maintenance_logs.select_related("performed_by")
-        ctx["log_form"] = MaintenanceLogForm()
+        ctx["log_form"] = MaintenanceLogForm(device=self.object)
         return ctx
 
 
@@ -301,7 +301,7 @@ class MaintenanceLogCreateView(StaffRequiredMixin, View):
             messages.error(request, "Thiết bị này đã bị khóa, không thể cập nhật bảo trì.")
             return redirect("devices:device_detail", pk=device.pk)
 
-        form = MaintenanceLogForm(request.POST)
+        form = MaintenanceLogForm(request.POST, device=device)
         if form.is_valid():
             log = form.save(commit=False)
             log.device = device

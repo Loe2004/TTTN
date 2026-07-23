@@ -57,6 +57,40 @@ class DeviceForm(StyledModelForm):
             "notes": "Ghi chú",
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from django.db.models import Q
+        if self.instance and self.instance.pk:
+            if self.instance.category_id:
+                self.fields["category"].queryset = Category.objects.filter(
+                    Q(is_active=True) | Q(id=self.instance.category_id)
+                )
+            else:
+                self.fields["category"].queryset = Category.objects.filter(is_active=True)
+                
+            if self.instance.location_id:
+                self.fields["location"].queryset = Location.objects.filter(
+                    Q(is_active=True) | Q(id=self.instance.location_id)
+                )
+            else:
+                self.fields["location"].queryset = Location.objects.filter(is_active=True)
+        else:
+            self.fields["category"].queryset = Category.objects.filter(is_active=True)
+            self.fields["location"].queryset = Location.objects.filter(is_active=True)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        purchase_date = cleaned_data.get("purchase_date")
+        warranty_expiry = cleaned_data.get("warranty_expiry")
+
+        if purchase_date and warranty_expiry:
+            if warranty_expiry < purchase_date:
+                self.add_error(
+                    "warranty_expiry", 
+                    "Ngày hết hạn bảo hành không được nhỏ hơn ngày mua."
+                )
+        return cleaned_data
+
 
 class CategoryForm(StyledModelForm):
     class Meta:
@@ -100,5 +134,18 @@ class MaintenanceLogForm(StyledModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        self.device = kwargs.pop("device", None)
         super().__init__(*args, **kwargs)
         self.fields["performed_at"].input_formats = ["%Y-%m-%dT%H:%M"]
+
+    def clean(self):
+        cleaned_data = super().clean()
+        performed_at = cleaned_data.get("performed_at")
+
+        if performed_at and self.device and self.device.purchase_date:
+            if performed_at.date() < self.device.purchase_date:
+                self.add_error(
+                    "performed_at",
+                    f"Ngày bảo trì không được nhỏ hơn ngày mua thiết bị ({self.device.purchase_date.strftime('%d/%m/%Y')})."
+                )
+        return cleaned_data
