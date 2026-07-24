@@ -11,7 +11,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Q
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import (
     CreateView,
@@ -25,7 +25,13 @@ from django.views.generic import (
 
 from accounts.mixins import ManagerRequiredMixin, StaffRequiredMixin, AdminRequiredMixin
 
-from .forms import CategoryForm, DeviceForm, LocationForm, MaintenanceLogForm
+from .forms import (
+    CategoryForm,
+    DeviceForm,
+    LocationForm,
+    MaintenanceLogForm,
+    ReportDamageForm,
+)
 from .models import Category, Device, Location, MaintenanceLog, DeviceHistory
 from .utils import assign_qr_code
 
@@ -311,6 +317,49 @@ class MaintenanceLogCreateView(StaffRequiredMixin, View):
         else:
             messages.error(request, "Dữ liệu nhật ký không hợp lệ.")
         return redirect("devices:device_detail", pk=device_pk)
+
+
+class DeviceReportDamageView(LoginRequiredMixin, View):
+    """View to report device damage. Open to all logged-in users."""
+
+    def get(self, request, pk):
+        device = get_object_or_404(Device, pk=pk)
+        if not device.is_active or device.status == Device.Status.BROKEN:
+            messages.error(request, "Thiết bị này không thể báo hỏng (đã khóa hoặc đã báo hỏng).")
+            return redirect("devices:device_detail", pk=device.pk)
+        form = ReportDamageForm(device=device)
+        return render(request, "devices/report_damage.html", {"device": device, "form": form})
+
+    def post(self, request, pk):
+        device = get_object_or_404(Device, pk=pk)
+        if not device.is_active or device.status == Device.Status.BROKEN:
+            messages.error(request, "Thiết bị này không thể báo hỏng (đã khóa hoặc đã báo hỏng).")
+            return redirect("devices:device_detail", pk=device.pk)
+
+        form = ReportDamageForm(request.POST, device=device)
+        if form.is_valid():
+            log = form.save(commit=False)
+            log.device = device
+            log.performed_by = request.user
+            log.action = "Báo hỏng"
+            log.save()
+
+            device.status = Device.Status.BROKEN
+            device.save()
+            messages.success(request, "Báo hỏng thiết bị thành công.")
+            return redirect("devices:device_detail", pk=device.pk)
+        return render(request, "devices/report_damage.html", {"device": device, "form": form})
+
+
+class MaintenanceLogListView(LoginRequiredMixin, ListView):
+    """Show all maintenance logs."""
+    model = MaintenanceLog
+    template_name = "devices/log_list.html"
+    context_object_name = "logs"
+    paginate_by = 20
+
+    def get_queryset(self):
+        return MaintenanceLog.objects.select_related("device", "performed_by").order_by("-performed_at")
 
 
 # ---------------------------------------------------------------------------

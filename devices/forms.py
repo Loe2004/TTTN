@@ -149,3 +149,36 @@ class MaintenanceLogForm(StyledModelForm):
                     f"Ngày bảo trì không được nhỏ hơn ngày mua thiết bị ({self.device.purchase_date.strftime('%d/%m/%Y')})."
                 )
         return cleaned_data
+
+
+class ReportDamageForm(StyledModelForm):
+    class Meta:
+        model = MaintenanceLog
+        fields = ("notes", "performed_at")
+        widgets = {
+            "performed_at": forms.DateTimeInput(
+                attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"
+            ),
+            "notes": forms.Textarea(attrs={"rows": 4, "placeholder": "Vui lòng mô tả chi tiết vấn đề hỏng hóc..."}),
+        }
+        labels = {
+            "notes": "Mô tả vấn đề hỏng hóc",
+            "performed_at": "Thời điểm báo hỏng",
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.device = kwargs.pop("device", None)
+        super().__init__(*args, **kwargs)
+        self.fields["performed_at"].input_formats = ["%Y-%m-%dT%H:%M"]
+
+    def clean(self):
+        cleaned_data = super().clean()
+        performed_at = cleaned_data.get("performed_at")
+
+        if performed_at and self.device and self.device.purchase_date:
+            if performed_at.date() < self.device.purchase_date:
+                self.add_error(
+                    "performed_at",
+                    f"Thời điểm báo hỏng không được nhỏ hơn ngày mua thiết bị ({self.device.purchase_date.strftime('%d/%m/%Y')})."
+                )
+        return cleaned_data

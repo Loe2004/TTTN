@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Báo hỏng {{ device.name }} — QR Device Manager{% endblock %}
+{% block header_title %}<h1 style="font-size:18px">Báo hỏng thiết bị</h1>{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+  <h2>Báo hỏng thiết bị: {{ device.name }}</h2>
+  <p class="text-muted" style="margin-bottom: 24px;">Bạn đang thực hiện báo cáo thiết bị hỏng. Thông tin này sẽ được gửi tới bộ phận kỹ thuật để xử lý. Xin vui lòng mô tả rõ sự cố gặp phải.</p>
+
+  <form method="post">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+    <div class="alert alert--danger" style="margin-bottom: 16px;">
+      {% for err in form.non_field_errors %}
+        <p>{{ err }}</p>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="form-group">
+      <label class="form-label" for="{{ form.performed_at.id_for_label }}">{{ form.performed_at.label }}</label>
+      {{ form.performed_at }}
+      {% if form.performed_at.errors %}
+      <div class="text-danger" style="font-size: 14px; margin-top: 4px;">{{ form.performed_at.errors|striptags }}</div>
+      {% endif %}
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="{{ form.notes.id_for_label }}">{{ form.notes.label }}</label>
+      {{ form.notes }}
+      {% if form.notes.errors %}
+      <div class="text-danger" style="font-size: 14px; margin-top: 4px;">{{ form.notes.errors|striptags }}</div>
+      {% endif %}
+    </div>
+
+    <div class="form-actions" style="margin-top: 24px;">
+      <button type="submit" class="btn btn--danger"><i data-lucide="alert-triangle"></i> Gửi Báo Hỏng</button>
+      <a href="{% url 'devices:device_detail' device.pk %}" class="btn btn--secondary">Hủy bỏ</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

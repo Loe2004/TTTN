@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Tất cả nhật ký bảo trì — QR Device Manager{% endblock %}
+{% block header_title %}<h1 style="font-size:18px">Nhật ký bảo trì</h1>{% endblock %}
+
+{% block content %}
+<div class="page__header">
+  <h1>Tất cả hoạt động bảo trì / báo hỏng</h1>
+  <a href="{% url 'dashboard' %}" class="btn btn--secondary">Quay lại Dashboard</a>
+</div>
+
+<div class="card">
+  <div class="table-wrapper" style="box-shadow: none; border: none">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Thời điểm</th>
+          <th>Thiết bị</th>
+          <th>Hành động</th>
+          <th>Người thực hiện</th>
+          <th>Chi phí</th>
+          <th>Ghi chú</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in logs %}
+        <tr>
+          <td>{{ log.performed_at|date:"d/m/Y H:i" }}</td>
+          <td><a href="{% url 'devices:device_detail' log.device.pk %}">{{ log.device.name }}</a></td>
+          <td>
+            {% if log.action == "Báo hỏng" %}
+            <span class="badge badge--danger">Báo hỏng</span>
+            {% else %}
+            <span class="badge badge--warning">{{ log.action }}</span>
+            {% endif %}
+          </td>
+          <td>{{ log.performed_by.get_full_name|default:log.performed_by.username|default:"—" }}</td>
+          <td><span class="cost-value">{{ log.cost|default:"0" }}</span> VNĐ</td>
+          <td>{{ log.notes|default:"—" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-muted" style="text-align:center">Chưa có hoạt động bảo trì nào.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% if is_paginated %}
+<div class="utility-bar" style="margin-top: 16px; justify-content: center; gap: 8px">
+  {% if page_obj.has_previous %}
+  <a href="?page={{ page_obj.previous_page_number }}" class="btn btn--ghost btn--sm">←</a>
+  {% endif %}
+  <span class="small">Trang {{ page_obj.number }}/{{ page_obj.paginator.num_pages }}</span>
+  {% if page_obj.has_next %}
+  <a href="?page={{ page_obj.next_page_number }}" class="btn btn--ghost btn--sm">→</a>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.cost-value').forEach(el => {
+      let rawText = el.textContent.trim();
+      let val = parseInt(rawText, 10);
+      if (!isNaN(val)) {
+        el.textContent = val.toLocaleString('vi-VN');
+      }
+    });
+  });
+</script>
+{% endblock %}

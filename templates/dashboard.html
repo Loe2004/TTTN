@@ -76,7 +76,10 @@
 </div>
 
 <div class="card" style="margin-top: 24px">
-  <h2>Hoạt động bảo trì gần đây</h2>
+  <div style="display: flex; justify-content: space-between; align-items: center">
+    <h2 style="margin: 0">Hoạt động bảo trì gần đây</h2>
+    <a href="{% url 'devices:log_list' %}" class="btn btn--ghost btn--sm">Xem tất cả</a>
+  </div>
   <div class="table-wrapper" style="margin-top: 16px; box-shadow: none; border: none">
     <table class="table">
       <thead><tr><th>Thời điểm</th><th>Thiết bị</th><th>Hành động</th><th>Người thực hiện</th></tr></thead>

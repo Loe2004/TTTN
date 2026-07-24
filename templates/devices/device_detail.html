@@ -13,6 +13,9 @@
 <div class="page__header">
   <h1>{{ device.name }}</h1>
   <div style="display: flex; gap: 8px">
+    {% if device.is_active and device.status != 'broken' %}
+    <a href="{% url 'devices:report_damage' device.pk %}" class="btn btn--danger" style="background-color: #ef4444; color: white;"><i data-lucide="alert-triangle"></i> Báo hỏng</a>
+    {% endif %}
     <a href="{% url 'devices:device_qr' device.pk %}" class="btn btn--ghost"><i data-lucide="qr-code"></i> In nhãn QR</a>
     {% if user.is_staff_role and device.is_active %}
     <a href="{% url 'devices:device_edit' device.pk %}" class="btn btn--primary"><i data-lucide="edit"></i> Sửa</a>

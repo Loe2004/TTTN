@@ -14,6 +14,7 @@ urlpatterns = [
         "<int:pk>/delete/", views.DeviceDeleteView.as_view(), name="device_delete"
     ),
     path("<int:pk>/unlock/", views.DeviceUnlockView.as_view(), name="device_unlock"),
+    path("<int:pk>/report-damage/", views.DeviceReportDamageView.as_view(), name="report_damage"),
     path("<int:pk>/qr/", views.DeviceQRView.as_view(), name="device_qr"),
     path("bulk-qr/", views.BulkDeviceQRView.as_view(), name="bulk_qr"),
     path(
@@ -29,6 +30,7 @@ urlpatterns = [
     path("history/", views.DeviceHistoryListView.as_view(), name="history_list"),
     path("history/<int:pk>/", views.DeviceHistoryDetailView.as_view(), name="history_detail"),
     # Maintenance logs
+    path("logs/", views.MaintenanceLogListView.as_view(), name="log_list"),
     path(
         "<int:device_pk>/logs/add/",
         views.MaintenanceLogCreateView.as_view(),
