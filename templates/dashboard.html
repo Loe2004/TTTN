@@ -57,7 +57,10 @@
 
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px; align-items: start">
   <div class="card">
-    <h2>Thiết bị mới nhất</h2>
+    <div style="display: flex; justify-content: space-between; align-items: center">
+      <h2 style="margin: 0">Thiết bị mới nhất</h2>
+      <a href="{% url 'devices:device_list' %}" class="btn btn--ghost btn--sm">Xem tất cả</a>
+    </div>
     <div class="table-wrapper" style="margin-top: 16px; box-shadow: none; border: none">
       <table class="table">
         <tbody>
