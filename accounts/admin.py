@@ -19,16 +19,16 @@ class UserAdmin(BaseUserAdmin):
     )
     list_filter = ("role", "is_staff", "is_superuser", "is_active", "is_approved")
     actions = ("approve_users", "reject_users")
-    search_fields = ("username", "email", "first_name", "last_name", "phone")
+    search_fields = ("username", "email", "first_name", "last_name")
     # add per-row action buttons
     list_display = list(list_display) + ["approve_button", "reject_button"]
 
     # Extend the default fieldsets with our custom fields.
     fieldsets = BaseUserAdmin.fieldsets + (
-        ("QR Device Manager", {"fields": ("role", "phone", "avatar")}),
+        ("QR Device Manager", {"fields": ("role", "avatar")}),
     )
     add_fieldsets = BaseUserAdmin.add_fieldsets + (
-        ("QR Device Manager", {"fields": ("role", "phone")}),
+        ("QR Device Manager", {"fields": ("role",)}),
     )
 
     @admin.action(description="Approve selected users")

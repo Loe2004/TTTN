@@ -123,9 +123,15 @@ class PasswordResetCompleteView(auth_views.PasswordResetCompleteView):
 # ---------------------------------------------------------------------------
 class ProfileView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     template_name = "accounts/profile.html"
-    form_class = ProfileForm
     success_url = reverse_lazy("accounts:profile")
     success_message = "Cập nhật hồ sơ thành công."
+
+    def get_form_class(self):
+        if self.request.user.role == "admin" or self.request.user.is_superuser:
+            from .forms import AdminProfileForm
+            return AdminProfileForm
+        from .forms import ProfileForm
+        return ProfileForm
 
     def get_object(self, queryset=None):
         return self.request.user

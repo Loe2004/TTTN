@@ -152,18 +152,25 @@ class ProfileForm(StyledFormMixin, forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ("first_name", "last_name", "email", "phone", "avatar")
+        fields = ("first_name", "last_name", "email", "avatar")
         labels = {
             "first_name": "Họ",
             "last_name": "Tên",
             "email": "Email",
-            "phone": "Số điện thoại",
             "avatar": "Ảnh đại diện",
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._style_fields()
+
+class AdminProfileForm(ProfileForm):
+    class Meta(ProfileForm.Meta):
+        fields = ("first_name", "last_name", "email", "role", "avatar")
+        labels = {
+            **ProfileForm.Meta.labels,
+            "role": "Vai trò (Dành riêng cho Admin linh hoạt chuyển đổi)",
+        }
 
 
 class StyledPasswordChangeForm(StyledFormMixin, PasswordChangeForm):
