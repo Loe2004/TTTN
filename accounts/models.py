@@ -45,20 +45,6 @@ class User(AbstractUser):
             return f"[{self.employee_code}] {name}"
         return name
 
-    def save(self, *args, **kwargs):
-        if not self.employee_code:
-            users = User.objects.filter(employee_code__iregex=r'^u\d+$')
-            max_num = 0
-            for u in users:
-                try:
-                    num = int(u.employee_code.lower().replace('u', ''))
-                    if num > max_num:
-                        max_num = num
-                except ValueError:
-                    pass
-            self.employee_code = f"u{max_num + 1:02d}"
-        super().save(*args, **kwargs)
-
     # --- RBAC convenience helpers -------------------------------------------
     @property
     def is_admin(self) -> bool:

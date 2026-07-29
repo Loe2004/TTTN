@@ -46,17 +46,19 @@ class LoginForm(StyledFormMixin, AuthenticationForm):
 
 class RegisterForm(StyledFormMixin, UserCreationForm):
     email = forms.EmailField(required=True, label="Email")
+    employee_code = forms.CharField(required=True, max_length=20, label="Mã nhân viên")
     first_name = forms.CharField(required=True, max_length=30, label="Họ")
     last_name = forms.CharField(required=True, max_length=30, label="Tên")
     role = forms.ChoiceField(choices=ROLE_CHOICES, label="Vai trò", initial=User.Role.VIEWER)
 
     class Meta(UserCreationForm.Meta):
         model = User
-        fields = ("username", "first_name", "last_name", "email", "role")
+        fields = ("username", "employee_code", "first_name", "last_name", "email", "role")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["username"].widget.attrs["placeholder"] = "Tên đăng nhập"
+        self.fields["employee_code"].widget.attrs["placeholder"] = "VD: u05, u06"
         self.fields["first_name"].widget.attrs["placeholder"] = "Họ"
         self.fields["last_name"].widget.attrs["placeholder"] = "Tên"
         self.fields["email"].widget.attrs["placeholder"] = "Email"
@@ -70,6 +72,12 @@ class RegisterForm(StyledFormMixin, UserCreationForm):
             raise forms.ValidationError("Email này đã được sử dụng cho tài khoản khác.")
         return email
 
+    def clean_employee_code(self):
+        code = self.cleaned_data.get("employee_code")
+        if code and User.objects.filter(employee_code__iexact=code).exists():
+            raise forms.ValidationError("Mã nhân viên này đã tồn tại trong hệ thống.")
+        return code
+
 
 class UserCreateForm(StyledFormMixin, UserCreationForm):
     """Admin form for creating a new user (replaces public registration)."""
@@ -80,6 +88,7 @@ class UserCreateForm(StyledFormMixin, UserCreationForm):
         model = User
         fields = (
             "username",
+            "employee_code",
             "first_name",
             "last_name",
             "email",
@@ -88,6 +97,7 @@ class UserCreateForm(StyledFormMixin, UserCreationForm):
         )
         labels = {
             "username": "Tên đăng nhập",
+            "employee_code": "Mã nhân viên (Bắt buộc)",
             "first_name": "Họ",
             "last_name": "Tên",
             "email": "Email",
@@ -98,6 +108,14 @@ class UserCreateForm(StyledFormMixin, UserCreationForm):
             "username": "Bắt buộc. 150 ký tự trở xuống. Chỉ chứa chữ cái, số và @/./+/-/_.",
             "is_active": "Chỉ định xem tài khoản có được phép đăng nhập hay không.",
         }
+
+    def clean_employee_code(self):
+        code = self.cleaned_data.get("employee_code")
+        if not code:
+            raise forms.ValidationError("Bắt buộc phải nhập Mã nhân viên.")
+        if User.objects.filter(employee_code__iexact=code).exists():
+            raise forms.ValidationError("Mã nhân viên này đã tồn tại trong hệ thống.")
+        return code
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -141,16 +159,17 @@ class UserUpdateForm(StyledFormMixin, forms.ModelForm):
         }
         help_texts = {
             "username": "Bắt buộc. 150 ký tự trở xuống. Chỉ chứa chữ cái, số và @/./+/-/_.",
-            "employee_code": "Có thể thay đổi. Hệ thống sẽ kiểm tra trùng lặp.",
+            "employee_code": "Bắt buộc. Hệ thống sẽ kiểm tra trùng lặp.",
             "is_active": "Chỉ định xem tài khoản có được phép đăng nhập hay không.",
         }
 
     def clean_employee_code(self):
         code = self.cleaned_data.get("employee_code")
-        if code:
-            code = code.lower()
-            if User.objects.filter(employee_code=code).exclude(pk=self.instance.pk).exists():
-                raise forms.ValidationError("Mã nhân viên này đã tồn tại trên hệ thống!")
+        if not code:
+            raise forms.ValidationError("Bắt buộc phải nhập Mã nhân viên.")
+        code = code.lower()
+        if User.objects.filter(employee_code=code).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError("Mã nhân viên này đã tồn tại trên hệ thống!")
         return code
 
     def __init__(self, *args, **kwargs):
@@ -184,15 +203,16 @@ class AdminProfileForm(ProfileForm):
             "role": "Vai trò (Dành riêng cho Admin linh hoạt chuyển đổi)",
         }
         help_texts = {
-            "employee_code": "Admin có quyền thay đổi mã của chính mình.",
+            "employee_code": "Bắt buộc. Admin có quyền thay đổi mã của chính mình.",
         }
 
     def clean_employee_code(self):
         code = self.cleaned_data.get("employee_code")
-        if code:
-            code = code.lower()
-            if User.objects.filter(employee_code=code).exclude(pk=self.instance.pk).exists():
-                raise forms.ValidationError("Mã nhân viên này đã tồn tại trên hệ thống!")
+        if not code:
+            raise forms.ValidationError("Bắt buộc phải nhập Mã nhân viên.")
+        code = code.lower()
+        if User.objects.filter(employee_code=code).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError("Mã nhân viên này đã tồn tại trên hệ thống!")
         return code
 
 
