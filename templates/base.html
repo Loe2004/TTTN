@@ -87,9 +87,9 @@
           {% else %}
           <span class="avatar">{{ user.username|first|upper }}</span>
           {% endif %}
-          <div>
-            <div style="font-weight: 500">{{ user.get_full_name|default:user.username }}</div>
-            <div class="small">{{ user.get_role_display }}</div>
+          <div style="margin-left: 12px; line-height: 1.4">
+            <div style="font-weight: 500">{{ user }}</div>
+            <div style="font-size: 13px; color: var(--text-muted)">{{ user.get_role_display }}</div>
           </div>
           <form method="post" action="{% url 'accounts:logout' %}" style="margin-left: 16px">
             {% csrf_token %}

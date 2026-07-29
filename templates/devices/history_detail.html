@@ -20,7 +20,7 @@
     <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 8px;">
       Thiết bị: {{ history.device_name }}
     </h2>
-    <p class="text-muted">Thực hiện bởi: <strong>{{ history.performed_by.get_full_name|default:history.performed_by.username|default:"Hệ thống" }}</strong> vào lúc {{ history.created_at|date:"d/m/Y H:i:s" }}</p>
+    <p class="text-muted">Thực hiện bởi: <strong>{{ history.performed_by|default:"Hệ thống" }}</strong> vào lúc {{ history.created_at|date:"d/m/Y H:i:s" }}</p>
   </div>
   
   <div style="padding: 24px;">

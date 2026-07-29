@@ -209,6 +209,21 @@ class UserDeleteView(AdminRequiredMixin, DeleteView):
         messages.success(self.request, "Đã khóa người dùng.")
         return redirect(self.success_url)
 
+class UserHardDeleteView(AdminRequiredMixin, DeleteView):
+    model = User
+    success_url = reverse_lazy("accounts:user_list")
+
+    def get_queryset(self):
+        return super().get_queryset().exclude(pk=self.request.user.pk)
+
+    def form_valid(self, form):
+        if not self.object.is_active:
+            self.object.delete()
+            messages.success(self.request, "Đã xóa vĩnh viễn tài khoản khỏi hệ thống.")
+        else:
+            messages.error(self.request, "Không thể xóa tài khoản đang hoạt động.")
+        return redirect(self.success_url)
+
 
 class UserBulkDeactivateView(AdminRequiredMixin, View):
     def post(self, request):

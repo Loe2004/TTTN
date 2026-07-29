@@ -16,6 +16,12 @@
       <input type="text" class="form-control" value="{{ user.username }}" disabled />
       <div class="form-help">Vai trò: {{ user.get_role_display }}</div>
     </div>
+    {% if not user.is_admin and not user.is_superuser %}
+    <div class="form-group">
+      <label class="form-label">Mã nhân viên</label>
+      <input type="text" class="form-control" value="{{ user.employee_code|default:'—' }}" disabled />
+    </div>
+    {% endif %}
     {% for field in form %}
     <div class="form-group">
       <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>

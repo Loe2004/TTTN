@@ -18,11 +18,12 @@
     <div class="table-wrapper" style="margin-top: 16px">
       <table class="table">
         <thead>
-          <tr><th>Tài khoản</th><th>Email</th><th>Vai trò</th><th>Hành động</th></tr>
+          <tr><th>Mã NV</th><th>Tài khoản</th><th>Email</th><th>Vai trò</th><th>Hành động</th></tr>
         </thead>
         <tbody>
           {% for user in pending_users %}
           <tr>
+            <td style="font-weight: bold">{{ user.employee_code|default:"—" }}</td>
             <td>{{ user.username }}</td>
             <td>{{ user.email }}</td>
             <td>{{ user.get_role_display }}</td>
@@ -55,12 +56,13 @@
     <div class="table-wrapper" style="margin-top: 16px">
       <table class="table">
         <thead>
-          <tr><th>Tài khoản</th><th>Vai trò</th><th>Trạng thái</th></tr>
+          <tr><th>Mã NV</th><th>Tài khoản</th><th>Vai trò</th><th>Trạng thái</th></tr>
         </thead>
         <tbody>
           {% for user in all_users %}
           <tr>
-            <td>{{ user.username }}</td>
+            <td style="font-weight: bold">{{ user.employee_code|default:"—" }}</td>
+            <td><a href="{% url 'accounts:user_edit' user.pk %}">{{ user.username }}</a></td>
             <td>{{ user.get_role_display }}</td>
             <td>{% if user.is_active %}Hoạt động{% else %}Khóa{% endif %}</td>
           </tr>
@@ -94,7 +96,7 @@
         {% for h in recent_histories %}
         <tr>
           <td class="text-muted">{{ h.created_at|date:"d/m/Y H:i" }}</td>
-          <td>{{ h.performed_by.get_full_name|default:h.performed_by.username|default:"Hệ thống" }}</td>
+          <td>{{ h.performed_by|default:"Hệ thống" }}</td>
           <td>
             {% if h.action == 'CREATE' %}
             <span class="badge badge--success">Thêm mới</span>

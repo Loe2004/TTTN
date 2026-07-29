@@ -121,6 +121,7 @@ class UserUpdateForm(StyledFormMixin, forms.ModelForm):
         model = User
         fields = (
             "username",
+            "employee_code",
             "first_name",
             "last_name",
             "email",
@@ -130,6 +131,7 @@ class UserUpdateForm(StyledFormMixin, forms.ModelForm):
         )
         labels = {
             "username": "Tên đăng nhập",
+            "employee_code": "Mã nhân viên",
             "first_name": "Họ",
             "last_name": "Tên",
             "email": "Email",
@@ -139,8 +141,17 @@ class UserUpdateForm(StyledFormMixin, forms.ModelForm):
         }
         help_texts = {
             "username": "Bắt buộc. 150 ký tự trở xuống. Chỉ chứa chữ cái, số và @/./+/-/_.",
+            "employee_code": "Có thể thay đổi. Hệ thống sẽ kiểm tra trùng lặp.",
             "is_active": "Chỉ định xem tài khoản có được phép đăng nhập hay không.",
         }
+
+    def clean_employee_code(self):
+        code = self.cleaned_data.get("employee_code")
+        if code:
+            code = code.lower()
+            if User.objects.filter(employee_code=code).exclude(pk=self.instance.pk).exists():
+                raise forms.ValidationError("Mã nhân viên này đã tồn tại trên hệ thống!")
+        return code
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -166,11 +177,23 @@ class ProfileForm(StyledFormMixin, forms.ModelForm):
 
 class AdminProfileForm(ProfileForm):
     class Meta(ProfileForm.Meta):
-        fields = ("first_name", "last_name", "email", "role", "avatar")
+        fields = ("employee_code", "first_name", "last_name", "email", "role", "avatar")
         labels = {
             **ProfileForm.Meta.labels,
+            "employee_code": "Mã nhân viên",
             "role": "Vai trò (Dành riêng cho Admin linh hoạt chuyển đổi)",
         }
+        help_texts = {
+            "employee_code": "Admin có quyền thay đổi mã của chính mình.",
+        }
+
+    def clean_employee_code(self):
+        code = self.cleaned_data.get("employee_code")
+        if code:
+            code = code.lower()
+            if User.objects.filter(employee_code=code).exclude(pk=self.instance.pk).exists():
+                raise forms.ValidationError("Mã nhân viên này đã tồn tại trên hệ thống!")
+        return code
 
 
 class StyledPasswordChangeForm(StyledFormMixin, PasswordChangeForm):

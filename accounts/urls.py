@@ -52,6 +52,11 @@ urlpatterns = [
         name="user_delete",
     ),
     path(
+        "users/<int:pk>/hard-delete/",
+        views.UserHardDeleteView.as_view(),
+        name="user_hard_delete",
+    ),
+    path(
         "users/bulk-deactivate/",
         views.UserBulkDeactivateView.as_view(),
         name="user_bulk_deactivate",

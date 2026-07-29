@@ -35,7 +35,7 @@
             <span class="badge badge--warning">{{ log.action }}</span>
             {% endif %}
           </td>
-          <td>{{ log.performed_by.get_full_name|default:log.performed_by.username|default:"—" }}</td>
+          <td>{{ log.performed_by|default:"—" }}</td>
           <td><span class="cost-value">{{ log.cost|default:"0" }}</span> VNĐ</td>
           <td>{{ log.notes|default:"—" }}</td>
         </tr>

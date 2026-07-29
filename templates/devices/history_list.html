@@ -30,7 +30,7 @@
       {% for h in histories %}
       <tr>
         <td class="text-muted">{{ h.created_at|date:"d/m/Y H:i" }}</td>
-        <td>{{ h.performed_by.get_full_name|default:h.performed_by.username|default:"Hệ thống" }}</td>
+        <td>{{ h.performed_by|default:"Hệ thống" }}</td>
         <td>
           {% if h.action == 'CREATE' %}
           <span class="badge badge--success">Thêm mới</span>

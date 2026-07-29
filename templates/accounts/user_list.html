@@ -56,6 +56,7 @@
     <thead>
       <tr>
         <th style="width: 40px"><input type="checkbox" id="selectAll" /></th>
+        <th>Mã NV</th>
         <th>Tên đăng nhập</th>
         <th>Họ tên</th>
         <th>Email</th>
@@ -72,6 +73,7 @@
           <input type="checkbox" class="item-checkbox" value="{{ u.pk }}" />
           {% endif %}
         </td>
+        <td style="font-weight: bold">{{ u.employee_code|default:"—" }}</td>
         <td>{{ u.username }}</td>
         <td>{{ u.get_full_name|default:"—" }}</td>
         <td>{{ u.email|default:"—" }}</td>
@@ -90,6 +92,7 @@
             <button type="button" class="btn btn--danger btn--sm action-btn" data-action="khóa" data-username="{{ u.username }}" data-url="{% url 'accounts:user_delete' u.pk %}">Khóa</button>
             {% else %}
             <button type="button" class="btn btn--success btn--sm action-btn" data-action="mở khóa" data-username="{{ u.username }}" data-url="{% url 'accounts:user_unlock' u.pk %}">Mở khóa</button>
+            <button type="button" class="btn btn--danger btn--sm action-btn" data-action="xóa vĩnh viễn" data-username="{{ u.username }}" data-url="{% url 'accounts:user_hard_delete' u.pk %}">Xóa hẳn</button>
             {% endif %}
           {% endif %}
         </td>

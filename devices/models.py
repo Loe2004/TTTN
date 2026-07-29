@@ -125,9 +125,9 @@ class Device(TimeStampedModel):
 
     @property
     def assigned_to_display(self) -> str:
-        """Safely return full name, username, or placeholder."""
+        """Safely return formatted user string (includes employee code) or placeholder."""
         if self.assigned_to:
-            return self.assigned_to.get_full_name() or self.assigned_to.username
+            return str(self.assigned_to)
         return "—"
 
 

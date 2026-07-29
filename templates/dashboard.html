@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="page__header">
-  <h1>Xin chào, {{ user.get_full_name|default:user.username }} <i data-lucide="sparkles" style="color: var(--warning)"></i></h1>
+  <h1>Xin chào, {{ user }} <i data-lucide="sparkles" style="color: var(--warning)"></i></h1>
   {% if user.is_staff_role %}
   <a href="{% url 'devices:device_add' %}" class="btn btn--primary"><i data-lucide="plus"></i> Thêm thiết bị</a>
   {% endif %}
