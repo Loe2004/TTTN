@@ -32,7 +32,6 @@
                 {% csrf_token %}
                 <button type="submit" name="action" value="approve" class="btn btn--primary btn--sm">Duyệt</button>
                 <button type="submit" name="action" value="reject" class="btn btn--danger btn--sm">Từ chối</button>
-                <a href="{% url 'accounts:user_edit' user.pk %}" class="btn btn--ghost btn--sm">Sửa</a>
               </form>
             </td>
           </tr>

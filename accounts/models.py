@@ -30,7 +30,7 @@ class User(AbstractUser):
     employee_code = models.CharField(
         max_length=20, unique=True, blank=True, null=True, verbose_name="Mã nhân viên"
     )
-    avatar = models.ImageField(upload_to="avatars/", blank=True, null=True)
+    avatar = models.ImageField(upload_to="avatars/", blank=True, null=True, max_length=500)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

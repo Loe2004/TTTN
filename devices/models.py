@@ -97,8 +97,8 @@ class Device(TimeStampedModel):
     purchase_date = models.DateField(null=True, blank=True)
     warranty_expiry = models.DateField(null=True, blank=True)
 
-    image = models.ImageField(upload_to="devices/", blank=True, null=True)
-    qr_code = models.ImageField(upload_to="qr_codes/", blank=True, null=True)
+    image = models.ImageField(upload_to="devices/", blank=True, null=True, max_length=500)
+    qr_code = models.ImageField(upload_to="qr_codes/", blank=True, null=True, max_length=500)
 
     notes = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
